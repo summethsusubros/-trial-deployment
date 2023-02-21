@@ -6,7 +6,9 @@ const passport = require('passport');
 const redis = require('redis-promisify')
 
 const client = redis.createClient();
-
+client.on("error", function (err) {
+  console.log("Error " + err);
+});
 const User = require('./models/User');
 
 require('./auth');

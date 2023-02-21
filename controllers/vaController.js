@@ -11,6 +11,9 @@ const Display = require('../models/Display');
 const redis = require('redis-promisify')
 
 const client = redis.createClient();
+client.on("error", function (err) {
+  console.log("Error " + err);
+});
 
 
 module.exports.index = (req, res) => {
