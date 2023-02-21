@@ -1,0 +1,139 @@
+<html lang="en">
+    <%- include("../partials/header.ejs") %>
+    <style>
+
+        .card-container{
+            display: flex; 
+            justify-content: space-around;  
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        .card-index{
+            height: 250px; 
+            width:250px; 
+            padding:10px 10px 10px 20px;
+            margin: 10px;
+            
+            box-shadow: 0px 0px 20px 2px lightgrey;
+        }
+
+        .card-index:hover{  
+            border-color: #f80000;
+        }
+
+        .card-request-ownership{
+            height:500px; 
+            width:350px; 
+            padding:10px;
+            margin: 10px;
+            
+            box-shadow: 0px 0px 20px 2px lightgrey;
+        }
+
+        .tab-container{
+            min-height: 700px;
+            border: solid; 
+            border-color: rgb(200, 200, 200); 
+            border-width: 1px; 
+            margin-top: 50px;
+            border-radius: 4px;
+        }
+
+        .scroll-container{
+            display: grid;
+            grid-auto-flow: column;
+            overflow: scroll;
+            
+            padding:10px;
+            border:solid;
+            border-color: rgb(200, 200, 200);
+            border-radius: 6px; 
+            margin:10px;
+            
+            justify-content: left;
+        }
+
+        .scroll-element{
+            padding: 14px 40px;
+            border-radius: 6px; 
+            margin: 0px 10px;
+            background-color: #f80000; /*linear-gradient(9deg, #f80000 , blue);*/
+            text-align: center;
+            display: inline-block;
+            color: white;
+            white-space: nowrap;
+        }
+
+        .scroll-element:hover{
+            background: linear-gradient(9deg, blue , red);
+        }
+
+        .dropbox-container{
+            border: solid; 
+            padding: 20px 20px;
+            display: flex; 
+            justify-content: flex-start;  
+            flex-wrap: wrap;
+            gap: 20px; 
+            align-items: center;
+        }
+
+        .icon-button{
+            background: transparent;
+            border: None;
+        }
+
+        .border-text{
+            margin-left: 22px; 
+            padding: 0px 4px;
+            background-color: white; 
+            width:auto; 
+            text-align: center; 
+            color: #f80000;
+            position:absolute; 
+            top:-13px;
+            z-index: 1;
+        }
+
+    </style>
+    <body class="is-light" style="margin-left: 10%; margin-right: 10%;"> 
+    
+    <%- include("../partials/nav.ejs") %>
+
+
+    <div class="block" style="min-height: 650px;padding: 10px; border: solid; border-color: rgb(200, 200, 200); border-width: 2px; border-radius: 4px; margin-top: 50px;">
+        <br>
+        <form method="POST">
+            
+                <div >
+                    <div class=" is-normal" style="display:inline-block;  text-align: right; margin-right: 10px;  padding-top: 7px; width:150px;">
+                        Tools Version:
+                    </div>
+                    <div class="select is-normal" style="display:inline-block;">
+                        <select id="toolsVersion" name="toolsVersion" onchange="clickButton()">
+                            <option disabled hidden selected value="default"> Select Tools Version </option>
+                            <% for(var i = 0; i < tools.length; i++) { %>
+                                <% var j = i + 1%>
+                                <option value="<%= tools[i].toolsVersion%>+<%= j %>"><%= tools[i].toolsVersion %></option>
+                            <% } %>
+                        </select>
+                    </div>
+                </div>   
+
+                <div >
+                    <button id="confirmSelectionButton" class="button" type="submit" formaction="/index/redirect" style="background-color: #f80000; color: white; display: none;">Confirm Selection</button>
+                </div>
+            
+        </form>
+
+    </div>
+    
+    <%- include("../partials/footer.ejs") %>
+    </body>
+    <script>
+        function clickButton(){
+            if(document.getElementById('toolsVersion').value != "default")
+                document.getElementById('confirmSelectionButton').click();
+        }
+    </script>
+</html>
