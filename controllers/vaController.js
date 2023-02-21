@@ -94,58 +94,8 @@ module.exports.get_index_history = (req, res) => {
   });
 }
 
-/*module.exports.post_index2_details = (req, res) => {
-
-  console.log(req.body);
-  var tools = req.body.orginal_tools.split('-').join(' ');
-  
-  var toolsReleaseArray = tools.split("+"); 
-  var filter_tools = toolsReleaseArray[0];
-  var build = req.body.orginal_build.split("+")[0];
-
-  var code = parseInt(toolsReleaseArray[1]) + 0.01 * (parseInt(req.body.orginal_build.split("+")[1]));
-
-  Release.find({}, "toolsVersion", (err, tools) => {
-    if (err) return handleError(err);
-    Release.findOne({toolsVersion: filter_tools}, "build", (err, release) => {
-      if (err) return handleError(err);
-      if(build === 'All')
-      Display.find({toolsRelease: filter_tools}, (err, data) => {
-        if (err) return console.log(err);
-        res.render('va/index2',{title: 'Platform Tools', currentUser: req.user?req.user:"", tools: tools,
-         build_list: release.build, filter_tools: filter_tools, display: data, filter_build: build, 
-         orginal_tools: req.params.tools, orginal_build: req.body.build});
-      });
-      else
-      Display.find({code: code}, (err, data) => {
-        if (err) return console.log(err);
-        Product.findOne({name: req.body.productInput},"version", (err, product_details) => {
-          if (err) return console.log(err);
-          console.log(product_details);
-          let version_details = product_details.version.filter(x => (x.name === req.body.versionInput))[0];
-          console.log(version_details);
-          res.render('va/index2',{title: 'Platform Tools', currentUser: req.user?req.user:"", tools: tools,
-          build_list: release.build, filter_tools: filter_tools, display: data, filter_build: build,
-          orginal_tools: req.body.orginal_tools, orginal_build: req.body.orginal_build, version_details: version_details});
-        });
-      });
-    });
-  });
-}
-*/
-
-module.exports.chart = (req, res) => {
-      res.render('va/chart',{title: 'Chart', currentUser: req.user?req.user:""}); 
-}
-
-
 module.exports.filter = (req, res) => {
       res.render('va/filterByProduct',{ title: 'Filter By Product', currentUser: req.user?req.user:""});
-}
-
-
-module.exports.browser_support = (req, res) => {
-      res.render('va/browserSupport',{title: 'Browser Support', currentUser: req.user?req.user:""});
 }
 
 //-----------------------------------------------------//

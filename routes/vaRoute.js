@@ -14,9 +14,7 @@ router.post('/index/redirect', vaController.post_index);
 router.post('/index/view/:tools', vaController.post_index2);
 router.get('/index/history/:product/:platform', vaController.get_index_history);
 
-router.get('/chart', vaController.chart);
 router.get('/filter', vaController.filter);
-router.get('/browser-support', vaController.browser_support);
 
 router.get('/configure', isLoggedIn, vaController.get_configure);
 router.get('/configure/ownership', isLoggedIn, vaController.get_ownership);
