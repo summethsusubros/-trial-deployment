@@ -39,9 +39,10 @@ module.exports.post_index = (req, res) => {
 }
 
 module.exports.post_index2 = (req, res) => {
-
+  console.log('got post request');
   var tools = req.params.tools.split('-').join(' ');
   var filter_tools = tools.split("+")[0];
+  console.log("body:")
   console.log(req.body);
   var build = req.body.build.split("+")[0];
   var code = parseInt(tools.split("+")[1]) + 0.01 * (parseInt(req.body.build.split("+")[1]));
