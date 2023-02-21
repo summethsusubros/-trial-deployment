@@ -3,13 +3,15 @@ const bodyParser = require('body-parser');
 const session = require('express-session');
 const mongoose = require("mongoose");
 const passport = require('passport');
-const redis = require('redis-promisify')
+const responseTime = require('response-time');
+const redis = require('redis-promisify');
 
 const client = redis.createClient();
 client.on("error", function (err) {
   console.log("Error " + err);
 });
 const User = require('./models/User');
+
 
 require('./auth');
 const authRoutes = require('./routes/authRoute');
@@ -25,6 +27,8 @@ mongoose.connect(dbURI, { useNewUrlParser: true, useUnifiedTopology: true })
 
 // express app
 const app = express();
+
+app.use(responseTime());
 
 // register view engine
 app.use(bodyParser.urlencoded({ extended: true })); 
