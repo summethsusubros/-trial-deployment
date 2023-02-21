@@ -181,13 +181,14 @@
                                             <td><%= display[i].version %> 
                                                 <input class="buildCopy" name="build" type="text" hidden>
                                                 <input name="productInput" type="text" value="<%= display[i].product %>" hidden>
+                                                <input name="platformInput" type="text" value="<%= display[i].platform %>" hidden>
                                                 <input name="versionInput" type="text" value="<%= display[i].version %>" hidden> 
                                                 <input name="rowId" type="text" value="<%= i %>" hidden> 
                                                 <button class="is-large icon-button" type="submit"> 
                                                     <i class='fas fa-caret-right fa-lg' style="margin-bottom: 1px;"></i>
                                                 </button> 
                                             </td>         
-                                        </form>     
+                                        </form>   
                                     </tr> 
                                 <% } else { %> 
                                     <tr id="<%= i %>">
