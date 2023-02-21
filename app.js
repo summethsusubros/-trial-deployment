@@ -3,10 +3,11 @@ const bodyParser = require('body-parser');
 const session = require('express-session');
 const mongoose = require("mongoose");
 const passport = require('passport');
+const redis = require('redis-promisify')
+
+const client = redis.createClient();
 
 const User = require('./models/User');
-const Product = require('./models/Product');
-const Request = require('./models/Request');
 
 require('./auth');
 const authRoutes = require('./routes/authRoute');
