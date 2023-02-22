@@ -45,6 +45,101 @@ module.exports.post_index = (req, res) => {
 }
 
 module.exports.post_index2 =  (req, res) => {
+  var tools = req.params.tools.split('-').join(' ');
+  var filter_tools = tools.split("+")[0];
+  console.log("body:")
+  console.log(req.body);
+  var build = req.body.build.split("+")[0];
+  var code = parseInt(tools.split("+")[1]) + 0.01 * (parseInt(req.body.build.split("+")[1]));
+
+  Release.find({}, "toolsVersion", (err, tools) => {
+    if (err) return handleError(err);
+    Release.findOne({toolsVersion: filter_tools}, "build", (err, release) => {
+      if (err) return handleError(err);
+
+        if(req.body.productInput){
+          if (err) return console.log(err);
+             client.get(`code:${code}`,async (error, redis_display_data) => {
+              if(error) console.log(error);
+              if(redis_display_data != null){
+                console.log('display cache hit');
+
+                client.get(`product:${req.body.productInput},version:${req.body.versionInput}`,async (error, redis_version_data) => {
+                  if(error) console.log(error);
+                  if(redis_version_data != null){
+                    console.log('version cache hit');
+                    res.render('va/index2',{title: 'Platform Tools', currentUser: req.user?req.user:"", tools: tools,
+                    build_list: release.build, filter_tools: filter_tools, display: JSON.parse(redis_display_data), filter_build: build, version_details: JSON.parse(redis_version_data),
+                    rowId: req.body.rowId, platform: req.body.platformInput, product: req.body.productInput});
+                  } else {
+                    console.log('version cache miss');
+                    Product.findOne({name: req.body.productInput},"version", (err, product_details) => {
+                      if (err) return console.log(err);
+                      let version_details = product_details.version.filter(x => (x.name === req.body.versionInput))[0];                  
+                      client.set(`product:${req.body.productInput},version:${req.body.versionInput}`,JSON.stringify(version_details));
+                      res.render('va/index2',{title: 'Platform Tools', currentUser: req.user?req.user:"", tools: tools,
+                      build_list: release.build, filter_tools: filter_tools, display: JSON.parse(redis_display_data), filter_build: build, version_details: version_details,
+                      rowId: req.body.rowId, platform: req.body.platformInput, product: req.body.productInput});
+                    });
+                  }
+                });
+
+              } else {
+                console.log('display cache miss');
+
+                Display.find({code: code}, (err, data) => {
+                  if (err) return console.log(err);
+                  client.set(`code:${code}`,JSON.stringify(data));
+
+                  client.get(`product:${req.body.productInput},version:${req.body.versionInput}`,async (error, redis_version_data) => {
+                    if(error) console.log(error);
+                    if(redis_version_data != null){
+                      console.log('version cache hit');
+                      res.render('va/index2',{title: 'Platform Tools', currentUser: req.user?req.user:"", tools: tools,
+                      build_list: release.build, filter_tools: filter_tools, display: data, filter_build: build, version_details: JSON.parse(redis_version_data),
+                      rowId: req.body.rowId, platform: req.body.platformInput, product: req.body.productInput});
+                    } else {
+                      console.log('version cache miss');
+                      Product.findOne({name: req.body.productInput},"version", (err, product_details) => {
+                        if (err) return console.log(err);
+                        let version_details = product_details.version.filter(x => (x.name === req.body.versionInput))[0];                  
+                        client.set(`product:${req.body.productInput},version:${req.body.versionInput}`,JSON.stringify(version_details));
+                        res.render('va/index2',{title: 'Platform Tools', currentUser: req.user?req.user:"", tools: tools,
+                        build_list: release.build, filter_tools: filter_tools, display: data, filter_build: build, version_details: version_details,
+                        rowId: req.body.rowId, platform: req.body.platformInput, product: req.body.productInput});
+                      });
+                    }
+                  });
+                });
+              }
+            });
+        } else {
+          client.get(`code:${code}`,async (error, redis_display_data) => {
+            if(error) console.log(error);
+            if(redis_display_data != null){
+              console.log('display cache hit');
+
+              res.render('va/index2',{title: 'Platform Tools', currentUser: req.user?req.user:"", tools: tools,
+              build_list: release.build, filter_tools: filter_tools, display: JSON.parse(redis_display_data), filter_build: build, version_details: {},
+              rowId: "", platform: "", product: ""});
+            } else {
+              console.log('display cache miss');
+
+              Display.find({code: code}, (err, data) => {
+                if (err) return console.log(err);
+                client.set(`code:${code}`,JSON.stringify(data));
+                res.render('va/index2',{title: 'Platform Tools', currentUser: req.user?req.user:"", tools: tools,
+                build_list: release.build, filter_tools: filter_tools, display: data, filter_build: build, version_details: {},
+                rowId: "", platform: "", product: ""});
+              });
+            }
+          });
+        }
+    });
+  });
+}
+
+/*module.exports.post_index2 =  (req, res) => {
   console.log('got post request');
   var tools = req.params.tools.split('-').join(' ');
   var filter_tools = tools.split("+")[0];
@@ -103,6 +198,7 @@ module.exports.post_index2 =  (req, res) => {
     });
   });
 }
+ */
 
 /*module.exports.post_index2 = (req, res) => {
   console.log('got post request');
