@@ -293,6 +293,15 @@ module.exports.post_add_version = (req, res) => {
   {
     Product.findOneAndUpdate({name: product}, { $pull: { version: {"name" : req.body.version}} }, (err, result) => {
       Product.findOneAndUpdate({name: product}, {$push: { version: {"name" : req.body.version, "major": req.body.majorVersion, "startdate": req.body.startDate,"enddate": req.body.endDate,"bitness": req.body.bitness, "downloadLink": req.body.downloadLink, "discription": req.body.discription, "location": req.body.location}} }, (err, result2) => {
+       let version_details =  {"name" : req.body.version, 
+                              "major": req.body.majorVersion, 
+                              "startdate": req.body.startDate,
+                              "enddate": req.body.endDate,
+                              "bitness": req.body.bitness, 
+                              "downloadLink": req.body.downloadLink, 
+                              "discription": req.body.discription,
+                              "location": req.body.location};
+        client.set(`product:${product},version:${req.body.version}`,JSON.stringify(version_details));
         res.redirect('/configure/product/' + product);
         if (err) console.log(err);  
       });
@@ -302,6 +311,19 @@ module.exports.post_add_version = (req, res) => {
   
   if(req.body.deleteVersion) /// delete
     Product.findOneAndUpdate({name: product}, { $pull: { version: {"name" : req.body.deleteVersion}} }, (err, result) => {
+      Display.deleteMany({product: product, version: req.body.deleteVersion}, (err, result) => {
+        if(err) console.log(err);
+      });
+      Present.deleteMany({product: product, version: req.body.deleteVersion}, (err, result) => {
+        if(err) console.log(err);
+      });
+      /*const history_instance = new History({code: -1, product: product, toolsRelease: "", build: "", 
+        platform: "All Platform", version: req.body.deleteVersion, action: "Version removed from VA"});
+      history_instance.save((err) => {
+        if (err) console.log(err);
+      });*/
+      
+      client.del(`product:${product},version:${req.body.deleteVersion}`);
       res.redirect('/configure/product/' + product);
       if (err) return handleError(err); 
   });

@@ -27,11 +27,13 @@
                 <td><%= history[i].toolsRelease %></td>
                 <td><%= history[i].build %></td> 
                 <td><%= history[i].version %></td>  
-                <% if( history[i].action === 'Support') {%>
+                <%  if( history[i].action === 'Support') {%>
                     <td style="color: rgb(31, 180, 31);"><%= history[i].action %></td>  
-                <%} else {%>
+                <%} else if(history[i].action === 'Deprecate'){%>
                     <td style="color: #f80000"><%= history[i].action %></td>  
-                <% } %>  
+                <%} else {%>  
+                    <td style="color: purple"><%= history[i].action %></td> 
+                <%} %> 
                 <form method="POST">
                     <td>
                         <input type="text" name="historyId" value="<%= history[i]._id %>" hidden>
