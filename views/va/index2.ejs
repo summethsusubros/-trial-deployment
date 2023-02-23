@@ -146,10 +146,10 @@
                                 <option value="<%= build_list[i]%>+<%= j %>"><%= build_list[i]%></option>
                             <%} %>
                         <% } %>
-                        <% if( 'All' === filter_build) {%>
-                            <option selected value="<%= build_list[i]%>+all">All</option>
+                        <% if( 'Latest' === filter_build) {%>
+                            <option selected value="<%= build_list[build_list.length - 1]%>+<%= build_list.length %>+Latest">Latest</option>
                         <%} else {%>
-                            <option value="<%= build_list[i]%>+all">All</option>
+                            <option value="<%= build_list[build_list.length - 1]%>+<%= build_list.length %>+Latest">Latest</option>
                         <%} %>  
                     </select>
                 </div>
@@ -251,7 +251,11 @@
                                 <tr>               
                                     <th>Location: </th>
                                     <td><%= version_details.location %></td>
-                                </tr>      
+                                </tr>  
+                                <tr>               
+                                    <th>Notes: </th>
+                                    <td><%= version_details.notes %></td>
+                                </tr>    
                             </tbody>
                         </table>
                     </div>

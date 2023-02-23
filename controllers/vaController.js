@@ -49,7 +49,7 @@ module.exports.post_index2 =  (req, res) => {
   var filter_tools = tools.split("+")[0];
   console.log("body:")
   console.log(req.body);
-  var build = req.body.build.split("+")[0];
+  var build = req.body.build.split("+").length === 3?'Latest':req.body.build.split("+")[0]
   var code = parseInt(tools.split("+")[1]) + 0.01 * (parseInt(req.body.build.split("+")[1]));
 
   Release.find({}, "toolsVersion", (err, tools) => {
@@ -388,7 +388,7 @@ module.exports.post_add_version = (req, res) => {
   if(!req.body.deleteVersion) ///  add
   {
     Product.findOneAndUpdate({name: product}, { $pull: { version: {"name" : req.body.version}} }, (err, result) => {
-      Product.findOneAndUpdate({name: product}, {$push: { version: {"name" : req.body.version, "major": req.body.majorVersion, "startdate": req.body.startDate,"enddate": req.body.endDate,"bitness": req.body.bitness, "downloadLink": req.body.downloadLink, "discription": req.body.discription, "location": req.body.location}} }, (err, result2) => {
+      Product.findOneAndUpdate({name: product}, {$push: { version: {"name" : req.body.version, "major": req.body.majorVersion, "startdate": req.body.startDate,"enddate": req.body.endDate,"bitness": req.body.bitness, "downloadLink": req.body.downloadLink, "discription": req.body.discription, "location": req.body.location, "notes": req.body.notes}} }, (err, result2) => {
        let version_details =  {"name" : req.body.version, 
                               "major": req.body.majorVersion, 
                               "startdate": req.body.startDate,
@@ -396,7 +396,8 @@ module.exports.post_add_version = (req, res) => {
                               "bitness": req.body.bitness, 
                               "downloadLink": req.body.downloadLink, 
                               "discription": req.body.discription,
-                              "location": req.body.location};
+                              "location": req.body.location,
+                              "notes":req.body.notes};
         client.set(`product:${product},version:${req.body.version}`,JSON.stringify(version_details));
         res.redirect('/configure/product/' + product);
         if (err) console.log(err);  
@@ -461,6 +462,7 @@ module.exports.post_commit = (req, res) => {
 
       for(let i = 0; i < codeArray.length; i++)
       {
+        client.del(`code:${codeArray[i]}`);
         if(req.body.action === "Support"){
           const display_instance = new Display({code: codeArray[i], product: req.body.product,
             platform: req.body.platform, version: req.body.productVersion});
