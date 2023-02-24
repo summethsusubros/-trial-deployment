@@ -1,5 +1,5 @@
 const { Router } = require('express');
-const adminController = require('../controllers/adminController');
+const adminController = require('../controllers/admin2Controller');
 const User = require('../models/User');
 
 const router = Router();

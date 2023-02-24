@@ -8,7 +8,7 @@ const Present = require('../models/Present');
 const Data = require('../models/Data'); 
 const Display = require('../models/Display'); 
 
-const redis = require('redis-promisify')
+const redis = require('redis-promisify');
 
 const client = redis.createClient();
 client.on("error", function (err) {
@@ -43,6 +43,7 @@ module.exports.index2 = (req, res) => {
 module.exports.post_index = (req, res) => {
   res.redirect('/index/view/' + req.body.toolsVersion.split(' ').join('-'));
 }
+
 
 module.exports.post_index2 =  (req, res) => {
   var tools = req.params.tools.split('-').join(' ');
@@ -448,18 +449,18 @@ module.exports.post_commit = (req, res) => {
       if (err) return console.log(err);
       var codeArray = result.codeArray;
 
-      console.log("codeArray")
-      console.log(codeArray);
+      // console.log("codeArray")
+      // console.log(codeArray);
 
       codeArray.sort();
 
-      console.log("codeArray")
-      console.log(codeArray);
+      // console.log("codeArray")
+      // console.log(codeArray);
 
       codeArray = codeArray.filter(x => x >= code)
 
-      console.log("codeArray")
-      console.log(codeArray);
+      // console.log("codeArray")
+      // console.log(codeArray);
 
       for(let i = 0; i < codeArray.length; i++)
       {

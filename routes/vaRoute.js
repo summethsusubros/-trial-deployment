@@ -1,5 +1,5 @@
 const { Router } = require('express');
-const vaController = require('../controllers/vaController');
+const vaController = require('../controllers/va2Controller');
 
 const router = Router();
    
