@@ -27,5 +27,4 @@ router.post('/administrate/pre-add-builds', isLoggedIn, isAdmin,adminController.
 router.post('/administrate/add-builds', isLoggedIn, isAdmin,adminController.postAdministrateAddBuilds);
 
 
-
 module.exports = router;
