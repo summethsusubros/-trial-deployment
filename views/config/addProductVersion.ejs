@@ -4,73 +4,6 @@
     <body class="is-light" style="margin-left: 10%; margin-right: 10%;"> 
         <style>
 
-
-            .card-container{
-                display: flex; 
-                justify-content: space-around;  
-                flex-wrap: wrap;
-                align-items: center;
-            }
-            .card-index{
-                height: 250px; 
-                width:250px; 
-                padding:10px 10px 10px 20px;
-                margin: 10px;
-                
-                box-shadow: 0px 0px 20px 2px lightgrey;
-            }
-
-            .card-index:hover{  
-                border-color: #f80000;
-            }
-    
-            .card-request-ownership{
-                height:500px; 
-                width:350px; 
-                padding:10px;
-                margin: 10px;
-                
-                box-shadow: 0px 0px 20px 2px lightgrey;
-            }
-
-            .tab-container{
-                min-height: 700px;
-                border: solid; 
-                border-color: rgb(200, 200, 200); 
-                border-width: 1px; 
-                margin-top: 50px;
-                border-radius: 4px;
-            }
-
-            .scroll-container{
-                display: grid;
-                grid-auto-flow: column;
-                overflow: scroll;
-                
-                padding:10px;
-                border:solid;
-                border-color: rgb(200, 200, 200);
-                border-radius: 6px; 
-                margin:10px;
-                
-                justify-content: left;
-            }
-
-            .scroll-element{
-                padding: 14px 40px;
-                border-radius: 6px; 
-                margin: 0px 10px;
-                background-color: #f80000; /*linear-gradient(9deg, #f80000 , blue);*/
-                text-align: center;
-                display: inline-block;
-                color: white;
-                white-space: nowrap;
-            }
-
-            .scroll-element:hover{
-                background: linear-gradient(9deg, blue , red);
-            }
-
             .icon-button{
                 background: transparent;
                 border: None;
@@ -89,16 +22,6 @@
             opacity: 0.5; /* Firefox */
             }
 
-            .dropbox-container{
-                border: solid; 
-                border-radius: 10px;
-                padding: 20px 20px;
-                display: flex; 
-                justify-content: flex-start;  
-                flex-wrap: wrap;
-                gap: 20px; 
-                align-items: center;
-            }
 
             .border-text{
                 margin-left: 22px; 
@@ -153,7 +76,6 @@
                             <div class="dropdown-content">
                                 <% for(var i = 0; i < owned.length; i++) { %>
                                     <% var route = '/configure/product/' + owned[i].split(' ').join('-'); %>
-                                    <% console.log(route) %>
                                     <%  if( name === owned[i]){ %>
                                         <a href="<%= route %>"  class="dropdown-item" style="color: white; background-color: rgba(248,0,0, 0.8);" >
                                             <%= owned[i] %>  
@@ -203,6 +125,9 @@
                                     <input class="input input-box" type="text" id="notesInput" name="notes" placeholder="Notes">
                                 </div>
                                 <div>
+                                    <input class="input input-box" type="text" id="usedInput" name="used" value="no" placeholder="Used">
+                                </div>
+                                <div>
                                     <button class="button" style="background-color: #f80000; color: white;" type="submit"> Add/Update version</button>
                                 </div>
 
@@ -227,6 +152,7 @@
                                 <th >Discription </th>
                                 <th >Location </th>
                                 <th >Notes </th>
+                                <th >Used </th>
                                 <th >Actions</th>
                             </tr>
                             </thead>
@@ -242,6 +168,7 @@
                                 <td id="discriptionOutput<%= i %>"><%= version[i].discription %></td>
                                 <td id="locationOutput<%= i %>"><%= version[i].location %></td>
                                 <td id="notesOutput<%= i %>"><%= version[i].notes %></td>
+                                <td id="usedOutput<%= i %>"><%= version[i].used %></td>
                                 <form method="POST">
                                     <input type="hidden" name="deleteVersion" value="<%= version[i].name %>"/>
                                     <td>  
@@ -310,6 +237,7 @@
             document.getElementById("discriptionInput").value = document.getElementById("discriptionOutput" + i).innerText;
             document.getElementById("locationInput").value = document.getElementById("locationOutput" + i).innerText;
             document.getElementById("notesInput").value = document.getElementById("notesOutput" + i).innerText;
+            document.getElementById("usedInput").value = document.getElementById("usedOutput" + i).innerText;
 
             document.getElementById("versionInput").style.pointerEvents = "None";
             document.getElementById("versionInput").style.backgroundColor = "rgba(12, 12, 12, 0.1)";
@@ -325,6 +253,7 @@
             document.getElementById("discriptionInput").value = document.getElementById("discriptionOutput" + i).innerText;
             document.getElementById("locationInput").value = document.getElementById("locationOutput" + i).innerText;
             document.getElementById("notesInput").value = document.getElementById("notesOutput" + i).innerText;
+            document.getElementById("usedInput").value = document.getElementById("usedOutput" + i).innerText;
             document.getElementById("versionInput").style.pointerEvents = "auto";
             document.getElementById("versionInput").style.backgroundColor = "white";
         }

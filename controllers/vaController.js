@@ -388,7 +388,7 @@ module.exports.post_add_version = (req, res) => {
   if(!req.body.deleteVersion) ///  add
   {
     Product.findOneAndUpdate({name: product}, { $pull: { version: {"name" : req.body.version}} }, (err, result) => {
-      Product.findOneAndUpdate({name: product}, {$push: { version: {"name" : req.body.version, "major": req.body.majorVersion, "startdate": req.body.startDate,"enddate": req.body.endDate,"bitness": req.body.bitness, "downloadLink": req.body.downloadLink, "discription": req.body.discription, "location": req.body.location, "notes": req.body.notes}} }, (err, result2) => {
+      Product.findOneAndUpdate({name: product}, {$push: { version: {"name" : req.body.version, "major": req.body.majorVersion, "startdate": req.body.startDate,"enddate": req.body.endDate,"bitness": req.body.bitness, "downloadLink": req.body.downloadLink, "discription": req.body.discription, "location": req.body.location, "notes": req.body.notes, "used": req.body.used}} }, (err, result2) => {
        let version_details =  {"name" : req.body.version, 
                               "major": req.body.majorVersion, 
                               "startdate": req.body.startDate,
@@ -397,7 +397,8 @@ module.exports.post_add_version = (req, res) => {
                               "downloadLink": req.body.downloadLink, 
                               "discription": req.body.discription,
                               "location": req.body.location,
-                              "notes":req.body.notes};
+                              "notes":req.body.notes,
+                              "used":req.body.used};
         client.set(`product:${product},version:${req.body.version}`,JSON.stringify(version_details));
         res.redirect('/configure/product/' + product);
         if (err) console.log(err);  

@@ -4,7 +4,6 @@
     <body class="is-light" style="margin-left: 10%; margin-right: 10%;"> 
     
     <%- include("../partials/nav.ejs") %>
-    
 
     <p class="title"> History of version changes in <%= filter_product %></p>
     <table id="historyTable" class="table is-bordered is-striped is-narrow is-hoverable is-fullwidth">
@@ -31,9 +30,8 @@
                     <td style="color: rgb(31, 180, 31);"><%= history[i].action %></td>  
                 <%} else if(history[i].action === 'Deprecate'){%>
                     <td style="color: #f80000"><%= history[i].action %></td>  
-                <%} else {%>  
-                    <td style="color: purple"><%= history[i].action %></td> 
-                <%} %> 
+                <%} %>  
+                    
                 <form method="POST">
                     <td>
                         <input type="text" name="historyId" value="<%= history[i]._id %>" hidden>
