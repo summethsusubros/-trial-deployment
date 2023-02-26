@@ -362,16 +362,15 @@ module.exports.post_add_version = async (req, res) => {
     try {
         const product = req.params.product.split('-').join(' ');
         const versionDetails = {
-        name: req.body.version,
-        major: req.body.majorVersion,
-        startdate: req.body.startDate,
-        enddate: req.body.endDate,
-        bitness: req.body.bitness,
-        downloadLink: req.body.downloadLink,
-        discription: req.body.discription,
-        location: req.body.location,
-        notes: req.body.notes,
-        used: req.body.used,
+          name: req.body.version,
+          major: req.body.majorVersion,
+          startdate: req.body.startDate,
+          enddate: req.body.endDate,
+          bitness: req.body.bitness,
+          downloadLink: req.body.downloadLink,
+          discription: req.body.discription,
+          location: req.body.location,
+          notes: req.body.notes,
         };
 
         if (!req.body.deleteVersion) {
@@ -384,8 +383,6 @@ module.exports.post_add_version = async (req, res) => {
         } else {
         // delete
         const result = await Product.findOneAndUpdate({ name: product },{ $pull: { version: { name: req.body.deleteVersion } } });
-        await Display.deleteMany({product: product,version: req.body.deleteVersion});
-        await Present.deleteMany({ product: product, version: req.body.deleteVersion});
         client.del(`product:${product},version:${req.body.deleteVersion}`);
         res.redirect('/configure/product/' + product);
         }

@@ -125,9 +125,6 @@
                                     <input class="input input-box" type="text" id="notesInput" name="notes" placeholder="Notes">
                                 </div>
                                 <div>
-                                    <input class="input input-box" type="text" id="usedInput" name="used" value="no" placeholder="Used">
-                                </div>
-                                <div>
                                     <button class="button" style="background-color: #f80000; color: white;" type="submit"> Add/Update version</button>
                                 </div>
 
@@ -152,7 +149,6 @@
                                 <th >Discription </th>
                                 <th >Location </th>
                                 <th >Notes </th>
-                                <th >Used </th>
                                 <th >Actions</th>
                             </tr>
                             </thead>
@@ -168,7 +164,6 @@
                                 <td id="discriptionOutput<%= i %>"><%= version[i].discription %></td>
                                 <td id="locationOutput<%= i %>"><%= version[i].location %></td>
                                 <td id="notesOutput<%= i %>"><%= version[i].notes %></td>
-                                <td id="usedOutput<%= i %>"><%= version[i].used %></td>
                                 <form method="POST">
                                     <input type="hidden" name="deleteVersion" value="<%= version[i].name %>"/>
                                     <td>  
@@ -237,7 +232,6 @@
             document.getElementById("discriptionInput").value = document.getElementById("discriptionOutput" + i).innerText;
             document.getElementById("locationInput").value = document.getElementById("locationOutput" + i).innerText;
             document.getElementById("notesInput").value = document.getElementById("notesOutput" + i).innerText;
-            document.getElementById("usedInput").value = document.getElementById("usedOutput" + i).innerText;
 
             document.getElementById("versionInput").style.pointerEvents = "None";
             document.getElementById("versionInput").style.backgroundColor = "rgba(12, 12, 12, 0.1)";
@@ -253,7 +247,6 @@
             document.getElementById("discriptionInput").value = document.getElementById("discriptionOutput" + i).innerText;
             document.getElementById("locationInput").value = document.getElementById("locationOutput" + i).innerText;
             document.getElementById("notesInput").value = document.getElementById("notesOutput" + i).innerText;
-            document.getElementById("usedInput").value = document.getElementById("usedOutput" + i).innerText;
             document.getElementById("versionInput").style.pointerEvents = "auto";
             document.getElementById("versionInput").style.backgroundColor = "white";
         }
