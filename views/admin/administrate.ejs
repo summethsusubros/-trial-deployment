@@ -93,7 +93,8 @@
                 <form method="POST">
                     <div>
                         <div style="font-weight: 600; font-size: large;"> <%= request_list[i].product %></div> 
-                        <div style="font-weight:300; font-size: medium;"> <%= request_list[i].email %> </div>
+                        <div style="font-weight:300; font-size: small;"> <%= request_list[i].name %> </div>
+                        <div style="font-weight:300; font-size: small;"> <%= request_list[i].email %> </div>
                         <input type="hidden" name="product" value="<%= request_list[i].product %>"/>
                         <input type="hidden" name="email" value="<%= request_list[i].email %>"/>
                     </div>

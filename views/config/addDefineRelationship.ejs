@@ -167,11 +167,11 @@
                     <table id="presentTable" class="table is-bordered is-striped is-narrow is-hoverable is-fullwidth">
                         <thead>
                           <tr>
-                            <th onclick="sortTable(0)">Product <lord-icon src="https://cdn.lordicon.com/rvuqcvqy.json" trigger="hover" colors="primary:#121331,secondary:#000000" stroke="100" style="width:20px;height:14px"></lord-icon> </th>
-                            <th onclick="sortTable(1)">Platform <lord-icon src="https://cdn.lordicon.com/rvuqcvqy.json" trigger="hover" colors="primary:#121331,secondary:#000000" stroke="100" style="width:20px;height:14px"></lord-icon> </th>
-                            <th onclick="sortTable(2)">Tools Release <lord-icon src="https://cdn.lordicon.com/rvuqcvqy.json" trigger="hover" colors="primary:#121331,secondary:#000000" stroke="100" style="width:20px;height:14px"></lord-icon> </th>
-                            <th onclick="sortTable(3)">From Tools Build <lord-icon src="https://cdn.lordicon.com/rvuqcvqy.json" trigger="hover" colors="primary:#121331,secondary:#000000" stroke="100" style="width:20px;height:14px"></lord-icon> </th>        
-                            <th onclick="sortTable(4)">Supported Version <lord-icon src="https://cdn.lordicon.com/rvuqcvqy.json" trigger="hover" colors="primary:#121331,secondary:#000000" stroke="100" style="width:20px;height:14px"></lord-icon> </th>
+                            <th onclick="sortTable(0)">Product <lord-icon src="https://cdn.lordicon.com/rvuqcvqy.json" trigger="hover" colors="primary:#000000,secondary:#000000" stroke="100" style="width:20px;height:14px"></lord-icon> </th>
+                            <th onclick="sortTable(1)">Platform <lord-icon src="https://cdn.lordicon.com/rvuqcvqy.json" trigger="hover" colors="primary:#000000,secondary:#000000" stroke="100" style="width:20px;height:14px"></lord-icon> </th>
+                            <th onclick="sortTable(2)">Tools Release <lord-icon src="https://cdn.lordicon.com/rvuqcvqy.json" trigger="hover" colors="primary:#000000,secondary:#000000" stroke="100" style="width:20px;height:14px"></lord-icon> </th>
+                            <th onclick="sortTable(3)">From Tools Build <lord-icon src="https://cdn.lordicon.com/rvuqcvqy.json" trigger="hover" colors="primary:#000000,secondary:#000000" stroke="100" style="width:20px;height:14px"></lord-icon> </th>        
+                            <th onclick="sortTable(4)">Supported Version <lord-icon src="https://cdn.lordicon.com/rvuqcvqy.json" trigger="hover" colors="primary:#000000,secondary:#000000" stroke="100" style="width:20px;height:14px"></lord-icon> </th>
                             <th></th>
                           </tr>
                         </thead>
@@ -187,8 +187,9 @@
                                     <button class="is-large icon-button has-tooltip-arrow" data-tooltip="Delete" onclick="changeInputValues('<%= i %>')">     
                                         <lord-icon
                                             src="https://cdn.lordicon.com/gsqxdxog.json"
-                                            trigger="hover"
-                                            colors="primary:#121331,secondary:#000000"
+                                            trigger="morph"
+                                            colors="primary:#000000,secondary:#000000"
+                                            state="morph-trash-in"
                                             stroke="100"
                                             style="width:25px;height:25px">
                                         </lord-icon>

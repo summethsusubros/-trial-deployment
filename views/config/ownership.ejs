@@ -46,6 +46,23 @@
             
             
         <div class="container section" style="padding: 30px;">
+
+            <% for(let i = 0; i < messages.length; i++){ %>
+                <% if(messages[i].split(' ')[2] === 'approved') { %>
+                    <div class="notification is-success is-light">
+                        <button class="delete"></button>
+                        <%= messages[i] %>
+                    </div>
+                <% }else{ %>
+                    <div class="notification is-danger is-light">
+                        <button class="delete"></button>
+                        <%= messages[i] %>
+                    </div>
+                <% } %>
+                
+            <% } %>
+            
+            
             <div id="ownership" class="content-tab">
                 <div class="card-container">
                     
@@ -102,10 +119,7 @@
                             <div style="height: 420px;overflow-y:scroll;">
                             <% for(var i=0; i < owned.length; i++) { %>
                                 <div class="control">
-                                    <label> ✓
-
-
- <span style="margin-left: 1px;"> <%= owned[i] %> </span> </label>
+                                    <label> ✓ <span style="margin-left: 1px;"> <%= owned[i] %> </span> </label>
                                 </div> 
                             <% } %>     
                             </div>                     
@@ -122,4 +136,15 @@
          
     <%- include("../partials/footer.ejs") %>
     </body>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            (document.querySelectorAll('.notification .delete') || []).forEach(($delete) => {
+                const $notification = $delete.parentNode;
+
+                $delete.addEventListener('click', () => {
+                $notification.parentNode.removeChild($notification);
+                });
+            });
+        });
+    </script>
 </html>

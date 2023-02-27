@@ -10,7 +10,11 @@ const requestSchema = new mongoose.Schema({
         type: String,
         required: true,
         lowercase: true,
-    }
+  },
+  name: { 
+    type: String,
+    required: true,
+  }
   });
 
 

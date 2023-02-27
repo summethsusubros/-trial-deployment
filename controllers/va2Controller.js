@@ -186,15 +186,19 @@ module.exports.get_configure = (req, res) => {
   
 module.exports.get_ownership = async (req, res, next) => {
     try {
-      const loggedInUser = await User.findOne({ email: req.user.email }, 'requested owned');
+      const loggedInUser = await User.findOne({ email: req.user.email }, 'requested owned message');
+      await User.findOneAndUpdate({ email: req.user.email }, {$set: { message: [] }});
       const result = await Product.find({}, 'name version');
       const currentUser = req.user || '';
+      console.log('loggedInUser.message', loggedInUser.message);
+
       res.render('config/ownership', {
         title: 'Configure',
         currentUser,
         product: result,
         requested: loggedInUser.requested,
         owned: loggedInUser.owned,
+        messages: loggedInUser.message
       });
     } catch (error) {
       next(error);
@@ -221,13 +225,17 @@ module.exports.get_product_details = async (req, res, next) => {
       const filter_product = req.params.product.split('-').join(' ');
       const loggedInUser = await User.findOne({ email: req.user.email }, 'owned');
       const result = await Product.findOne({ name: filter_product }, 'name version');
+      let used = await Data.findOne({}, 'usedArray');
       const currentUser = req.user || '';
+      console.log(used);
+
       res.render('config/addProductVersion', {
         title: 'Configure',
         currentUser,
         owned: loggedInUser.owned,
         name: result.name,
         version: result.version,
+        used: used.usedArray
       });
     } catch (error) {
       next(error);
@@ -324,14 +332,16 @@ module.exports.post_ownership = async (req, res) => {
       if (Object.keys(req.body).length === 0) {
         return res.redirect('/configure/ownership');
       }
-  
+
+      console.log(req.user.name);
       const userEmail = req.user.email;
-  
+      const userName= req.user.name;
+
       if (req.body.addprod) {
         const addProdList = typeof(req.body.addprod) === 'object'?req.body.addprod:[req.body.addprod];
   
         for (let i = 0; i < addProdList.length; i++) {
-          const requestInstance = new Request({ product: addProdList[i], email: userEmail });
+          const requestInstance = new Request({ product: addProdList[i], email: userEmail, name: userName});
           await requestInstance.save();
         }
   
@@ -343,7 +353,7 @@ module.exports.post_ownership = async (req, res) => {
         const delProdList = typeof(req.body.delprod) === 'object'?req.body.delprod:[req.body.delprod];
   
         for (let i = 0; i < delProdList.length; i++) {
-          await Request.deleteOne({ product: delProdList[i], email: userEmail });
+          await Request.deleteOne({ product: delProdList[i], email: userEmail ,name: userName});
         }
   
         await User.findOneAndUpdate({ email: userEmail }, { $pullAll: { requested: delProdList } });
@@ -436,12 +446,14 @@ module.exports.post_commit = async (req, res) => {
       await history_instance.save();
   
       if(req.body.action === "Support") {
+        await Data.updateOne({}, { $push: { usedArray: req.body.productVersion } });
         const present_instance = new Present({code: code, product: req.body.product, toolsRelease: toolsRelease, build: build,
           platform: req.body.platform, version: req.body.productVersion});
         await present_instance.save();
       }
   
       if(req.body.action === "Deprecate") {
+        await Data.updateOne({}, { $pull: { usedArray: req.body.productVersion } });
         await Present.findOneAndDelete({product: req.body.product, platform: req.body.platform, version: req.body.productVersion});
       }
   

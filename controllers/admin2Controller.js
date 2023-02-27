@@ -9,7 +9,7 @@ const Display = require('../models/Display');
 
 module.exports.getAdministrate = async (req, res) => {
     try {
-      const request_list = await Request.find({}, "product email");
+      const request_list = await Request.find({}, "product email name");
       const admin_list = await User.find({ "role.1": { "$exists": true } }, "email");
       const product_list = await Product.find({}, "name");
       const platform_list = await Platform.find({}, "name");
@@ -72,7 +72,8 @@ module.exports.postAdministrateApproveManager = async (req, res) => {
     try {
       const email = req.body.email;
       const product = req.body.product;
-      await User.findOneAndUpdate({ email },{ $push: { owned: product }, $pull: { requested: product } });
+      await User.findOneAndUpdate({ email },{ $push: { owned: product }, $pull: { requested: product }});
+      await User.findOneAndUpdate({ email },{ $push: { message: `Admin have approved your request to own ${product}` }});
       await Request.deleteOne({ product, email });
       res.redirect('/administrate');
     } catch (err) {
@@ -86,6 +87,7 @@ module.exports.postAdministrateDeclineManager = async (req, res) => {
       const email = req.body.email;
       const product = req.body.product;
       await User.findOneAndUpdate({ email },{ $pull: { requested: product } });
+      await User.findOneAndUpdate({ email },{ $push: { message: `Admin have declined your request to own ${product}` }});
       await Request.deleteOne({ product, email });
       res.redirect('/administrate');
     } catch (err) {
@@ -93,6 +95,32 @@ module.exports.postAdministrateDeclineManager = async (req, res) => {
       res.redirect('/administrate');
     }
 };
+
+/*module.exports.postAdministrateApproveManager = async (req, res) => {
+    try {
+      const email = req.body.email;
+      const product = req.body.product;
+      await User.findOneAndUpdate({ email },{ $push: { owned: product }, $pull: { requested: product }, });
+      await Request.deleteOne({ product, email });
+      res.redirect('/administrate');
+    } catch (err) {
+      console.error(err);
+      res.redirect('/administrate');
+    }
+};
+
+module.exports.postAdministrateDeclineManager = async (req, res) => {
+    try {
+      const email = req.body.email;
+      const product = req.body.product;
+      await User.findOneAndUpdate({ email },{ $pull: { requested: product }, $push: { message: `Admin have declined your request to own ${product}` }});
+      await Request.deleteOne({ product, email });
+      res.redirect('/administrate');
+    } catch (err) {
+      console.error(err);
+      res.redirect('/administrate');
+    }
+}; */
   
 module.exports.postAdministrateAddPlatforms = async (req, res) => {
     const platform_name = req.body.platform_name;

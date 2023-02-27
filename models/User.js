@@ -20,6 +20,9 @@ const userSchema = new mongoose.Schema({
   },
   owned: {
     type: [String],
+  },
+  message: {
+    type: [String],
   }
 });
 

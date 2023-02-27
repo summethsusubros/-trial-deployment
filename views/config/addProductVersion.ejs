@@ -12,7 +12,7 @@
             }
 
             .input-box{
-                width: 160px;
+                width: 240px;
                 border-color: grey;
                 color: black;
             }
@@ -140,11 +140,11 @@
                         <table  id="versionTable" class="table is-bordered is-striped is-narrow is-hoverable is-fullwidth">
                             <thead>
                             <tr>
-                                <th onclick="sortTable(0)">Version <lord-icon src="https://cdn.lordicon.com/rvuqcvqy.json" trigger="hover" colors="primary:#121331,secondary:#000000" stroke="100" style="width:20px;height:14px"></lord-icon> </th>
-                                <th onclick="sortTable(1)">Major Version <lord-icon src="https://cdn.lordicon.com/rvuqcvqy.json" trigger="hover" colors="primary:#121331,secondary:#000000" stroke="100" style="width:20px;height:14px"></lord-icon> </th>
-                                <th onclick="sortTable(2)">Start Date <lord-icon src="https://cdn.lordicon.com/rvuqcvqy.json" trigger="hover" colors="primary:#121331,secondary:#000000" stroke="100" style="width:20px;height:14px"></lord-icon> </th>
-                                <th onclick="sortTable(3)">End Date <lord-icon src="https://cdn.lordicon.com/rvuqcvqy.json" trigger="hover" colors="primary:#121331,secondary:#000000" stroke="100" style="width:20px;height:14px"></lord-icon> </th>
-                                <th onclick="sortTable(4)">Bitness <lord-icon src="https://cdn.lordicon.com/rvuqcvqy.json" trigger="hover" colors="primary:#121331,secondary:#000000" stroke="100" style="width:20px;height:14px"></lord-icon> </th>
+                                <th onclick="sortTable(0)">Version <lord-icon src="https://cdn.lordicon.com/rvuqcvqy.json" trigger="hover" colors="primary:#000000,secondary:#000000" stroke="100" style="width:20px;height:14px"></lord-icon> </th>
+                                <th onclick="sortTable(1)">Major Version <lord-icon src="https://cdn.lordicon.com/rvuqcvqy.json" trigger="hover" colors="primary:#000000,secondary:#000000" stroke="100" style="width:20px;height:14px"></lord-icon> </th>
+                                <th onclick="sortTable(2)">Start Date <lord-icon src="https://cdn.lordicon.com/rvuqcvqy.json" trigger="hover" colors="primary:#000000,secondary:#000000" stroke="100" style="width:20px;height:14px"></lord-icon> </th>
+                                <th onclick="sortTable(3)">End Date <lord-icon src="https://cdn.lordicon.com/rvuqcvqy.json" trigger="hover" colors="primary:#000000,secondary:#000000" stroke="100" style="width:20px;height:14px"></lord-icon> </th>
+                                <th onclick="sortTable(4)">Bitness <lord-icon src="https://cdn.lordicon.com/rvuqcvqy.json" trigger="hover" colors="primary:#000000,secondary:#000000" stroke="100" style="width:20px;height:14px"></lord-icon> </th>
                                 <th >Download link </th>
                                 <th >Discription </th>
                                 <th >Location </th>
@@ -167,41 +167,57 @@
                                 <form method="POST">
                                     <input type="hidden" name="deleteVersion" value="<%= version[i].name %>"/>
                                     <td>  
-                                        <div style="width:90px;">                                                
-                                        <div style="display:inline-block">
-                                            <button class="is-large icon-button has-tooltip-arrow" data-tooltip="Delete" type="submit">     
-                                                <lord-icon
-                                                    src="https://cdn.lordicon.com/gsqxdxog.json"
-                                                    trigger="hover"
-                                                    colors="primary:#121331,secondary:#000000"
-                                                    stroke="100"
-                                                    style="width:25px;height:25px">
-                                                </lord-icon>
-                                            </button>
-                                        </div> 
-                                        <div style="display:inline-block">
-                                            <button class="is-large icon-button has-tooltip-arrow" data-tooltip="Edit" type="button" onclick="updateTextField('<%= i %>')">    
-                                                <lord-icon
-                                                    src="https://cdn.lordicon.com/puvaffet.json"
-                                                    trigger="hover"
-                                                    colors="primary:#121331,secondary:#000000"
-                                                    stroke="100"
-                                                    style="width:26px;height:26px">
-                                                </lord-icon>
-                                            </button>
-                                        </div>
-                                        <div style="display:inline-block">
-                                            <button class="is-large icon-button has-tooltip-arrow" data-tooltip="Copy" type="button" onclick="copyToTextField('<%= i %>')">    
-                                                <lord-icon
-                                                    src="https://cdn.lordicon.com/nocovwne.json"
-                                                    trigger="hover"
-                                                    colors="primary:#121331,secondary:#000000"
-                                                    stroke="100"
-                                                    state="hover-2"
-                                                    style="width:25px;height:25px">
-                                                </lord-icon>
-                                            </button>
-                                        </div>
+                                        <div style="width:90px;">     
+                                            <% if(used.includes(version[i].name)) { %>                                           
+                                                <div style="display:inline-block">
+                                                    <button class="is-large icon-button has-tooltip-arrow" data-tooltip="Version is in use, can't delete" type="submit" disabled>     
+                                                        <lord-icon
+                                                            src="https://cdn.lordicon.com/gsqxdxog.json"
+                                                            trigger="hover"
+                                                            colors="primary:#000000,secondary:#000000"
+                                                            stroke="100"
+                                                            style="width:25px;height:25px">
+                                                        </lord-icon>
+                                                    </button>
+                                                </div> 
+                                            <% } else { %> 
+                                                <div style="display:inline-block">
+                                                    <button class="is-large icon-button has-tooltip-arrow" data-tooltip="Delete" type="submit">     
+                                                        <lord-icon
+                                                            src="https://cdn.lordicon.com/gsqxdxog.json"
+                                                            trigger="morph"
+                                                            colors="primary:#000000,secondary:#000000"
+                                                            state="morph-trash-in"
+                                                            stroke="100"
+                                                            style="width:25px;height:25px">
+                                                        </lord-icon>
+                                                    </button>
+                                                </div>
+                                            <% } %>
+                                                <div style="display:inline-block">
+                                                    <button class="is-large icon-button has-tooltip-arrow" data-tooltip="Edit" type="button" onclick="updateTextField('<%= i %>')">    
+                                                        <lord-icon
+                                                            src="https://cdn.lordicon.com/puvaffet.json"
+                                                            trigger="hover"
+                                                            colors="primary:#000000,secondary:#000000"
+                                                            stroke="100"
+                                                            style="width:26px;height:26px">
+                                                        </lord-icon>
+                                                    </button>
+                                                </div>
+                                            
+                                                <div style="display:inline-block">
+                                                    <button class="is-large icon-button has-tooltip-arrow" data-tooltip="Copy" type="button" onclick="copyToTextField('<%= i %>')">    
+                                                        <lord-icon
+                                                            src="https://cdn.lordicon.com/nocovwne.json"
+                                                            trigger="hover"
+                                                            colors="primary:#000000,secondary:#000000"
+                                                            stroke="100"
+                                                            state="hover-2"
+                                                            style="width:25px;height:25px">
+                                                        </lord-icon>
+                                                    </button>
+                                                </div>
                                         </div> 
                                     </td>
                                 </form>

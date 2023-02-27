@@ -22,15 +22,7 @@
       <% }else{ %>
         <a class="navbar-item" href="/">
       <% } %>
-        Platform Tools
-      </a>
-
-      <% if (title === 'Filter By Product') { %>
-        <a class="navbar-item has-text-white" style="background-color: #f80000;" href="/filter">
-      <% }else{ %>
-        <a class="navbar-item" href="/filter">
-      <% } %>
-          Filter by Product
+        Home
       </a>
 
       <% if (currentUser) { %>
@@ -43,7 +35,7 @@
       </a>
       <% } %>
 
-      <% if (currentUser) { %>
+      <% if (currentUser && currentUser.role.includes('admin')) { %>
       <% if (title === 'Administrate') { %>
         <a class="navbar-item has-text-white" style="background-color: #f80000;" href="/administrate">
       <% }else{ %>
@@ -56,13 +48,11 @@
     </div>
 
     <div class="navbar-end">
-
       <% if (currentUser) { %>
-  <!--      
-        <a class="navbar-item">
+        <a class="navbar-item" href="/configure/account">
           Welcome <%= currentUser.name %>
         </a> 
--->
+
         <a class="navbar-item" href="/logout">
           Logout       
         </a>
@@ -86,18 +76,6 @@
   </div>
 
 </nav>
-
-<% if (currentUser) { %>
-<nav class="navbar is-light" role="navigation" aria-label="main navigation"> 
-  <div id="navMenu" class="navbar-menu">
-    <div class="navbar-end">    
-        <a class="navbar-item" href="/configure/account">
-          Welcome <%= currentUser.name %>
-        </a>  
-    </div>
-  </div>
-</nav>
-<% } %>
 
 <script>
   document.addEventListener('DOMContentLoaded', () => {
