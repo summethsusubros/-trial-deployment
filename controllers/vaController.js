@@ -15,501 +15,464 @@ client.on("error", function (err) {
   console.log("Error " + err);
 });
 
+module.exports.index = async (req, res, next) => {
+    try {
+      const tools = await Release.find({}, 'toolsVersion');
+      res.render('va/index', {
+        title: 'Platform Tools',
+        currentUser: req.user || '',
+        tools,
+      });
+    } catch (error) {
+      next(error);
+    }
+  };
 
-module.exports.index = (req, res) => {
-  Release.find({}, "toolsVersion", (err, tools) => {
-    if (err) return handleError(err);
-      res.render('va/index',{title: 'Platform Tools', currentUser: req.user?req.user:"", tools: tools});
-  });
-}
 
-module.exports.index2 = (req, res) => {
-
-  var tools = req.params.tools.split('-').join(' ');
-  var toolsReleaseArray = tools.split("+"); 
-  var filter_tools = toolsReleaseArray[0];
-  
-  Release.find({}, "toolsVersion", (err, tools) => {
-    if (err) return handleError(err);
-    Release.findOne({toolsVersion: filter_tools}, "build", (err, release) => {
-      if (err) return handleError(err);
-      res.render('va/index2',{title: 'Platform Tools', currentUser: req.user?req.user:"", tools: tools,
-       build_list: release.build, filter_tools: filter_tools, display: "", filter_build: "", version_details: {},
-        rowId: "", platform: "", product: ""});
-    });
-  });
-}
+module.exports.index2 = async (req, res, next) => {
+    try {
+        const tools = req.params.tools.split('-').join(' ').split('+')[0];
+        const release = await Release.findOne({ toolsVersion: tools }, 'build');
+        const { build } = release;
+        res.render('va/index2', {
+        title: 'Platform Tools',
+        currentUser: req.user || '',
+        tools: await Release.find({}, 'toolsVersion'),
+        build_list: build,
+        filter_tools: tools,
+        display: '',
+        filter_build: '',
+        version_details: {},
+        rowId: '',
+        platform: '',
+        product: '',
+        });
+    } catch (error) {
+        next(error);
+    }
+};
 
 module.exports.post_index = (req, res) => {
-  res.redirect('/index/view/' + req.body.toolsVersion.split(' ').join('-'));
+    const tools = req.body.toolsVersion.split(' ').join('-');
+    const url = `/index/view/${tools}`;
+    res.redirect(url);
+};
+
+// Import required modules
+const { promisify } = require('util');
+
+// Promisify Redis client methods
+const getAsync = promisify(client.get).bind(client);
+const setAsync = promisify(client.set).bind(client);
+
+// Define function for getting display data
+async function getDisplayData(code) {
+  let redis_display_data = await getAsync(`code:${code}`);
+  
+  if (redis_display_data != null) {
+    console.log('display cache hit');
+    return JSON.parse(redis_display_data);
+  } else {
+    console.log('display cache miss');
+    let data = await Display.find({ code });
+    await setAsync(`code:${code}`, JSON.stringify(data));
+    return data;
+  }
 }
 
-
-module.exports.post_index2 =  (req, res) => {
-  var tools = req.params.tools.split('-').join(' ');
-  var filter_tools = tools.split("+")[0];
-  console.log("body:")
-  console.log(req.body);
-  var build = req.body.build.split("+").length === 3?'Latest':req.body.build.split("+")[0]
-  var code = parseInt(tools.split("+")[1]) + 0.01 * (parseInt(req.body.build.split("+")[1]));
-
-  Release.find({}, "toolsVersion", (err, tools) => {
-    if (err) return handleError(err);
-    Release.findOne({toolsVersion: filter_tools}, "build", (err, release) => {
-      if (err) return handleError(err);
-
-        if(req.body.productInput){
-          if (err) return console.log(err);
-             client.get(`code:${code}`,async (error, redis_display_data) => {
-              if(error) console.log(error);
-              if(redis_display_data != null){
-                console.log('display cache hit');
-
-                client.get(`product:${req.body.productInput},version:${req.body.versionInput}`,async (error, redis_version_data) => {
-                  if(error) console.log(error);
-                  if(redis_version_data != null){
-                    console.log('version cache hit');
-                    res.render('va/index2',{title: 'Platform Tools', currentUser: req.user?req.user:"", tools: tools,
-                    build_list: release.build, filter_tools: filter_tools, display: JSON.parse(redis_display_data), filter_build: build, version_details: JSON.parse(redis_version_data),
-                    rowId: req.body.rowId, platform: req.body.platformInput, product: req.body.productInput});
-                  } else {
-                    console.log('version cache miss');
-                    Product.findOne({name: req.body.productInput},"version", (err, product_details) => {
-                      if (err) return console.log(err);
-                      let version_details = product_details.version.filter(x => (x.name === req.body.versionInput))[0];                  
-                      client.set(`product:${req.body.productInput},version:${req.body.versionInput}`,JSON.stringify(version_details));
-                      res.render('va/index2',{title: 'Platform Tools', currentUser: req.user?req.user:"", tools: tools,
-                      build_list: release.build, filter_tools: filter_tools, display: JSON.parse(redis_display_data), filter_build: build, version_details: version_details,
-                      rowId: req.body.rowId, platform: req.body.platformInput, product: req.body.productInput});
-                    });
-                  }
-                });
-
-              } else {
-                console.log('display cache miss');
-
-                Display.find({code: code}, (err, data) => {
-                  if (err) return console.log(err);
-                  client.set(`code:${code}`,JSON.stringify(data));
-
-                  client.get(`product:${req.body.productInput},version:${req.body.versionInput}`,async (error, redis_version_data) => {
-                    if(error) console.log(error);
-                    if(redis_version_data != null){
-                      console.log('version cache hit');
-                      res.render('va/index2',{title: 'Platform Tools', currentUser: req.user?req.user:"", tools: tools,
-                      build_list: release.build, filter_tools: filter_tools, display: data, filter_build: build, version_details: JSON.parse(redis_version_data),
-                      rowId: req.body.rowId, platform: req.body.platformInput, product: req.body.productInput});
-                    } else {
-                      console.log('version cache miss');
-                      Product.findOne({name: req.body.productInput},"version", (err, product_details) => {
-                        if (err) return console.log(err);
-                        let version_details = product_details.version.filter(x => (x.name === req.body.versionInput))[0];                  
-                        client.set(`product:${req.body.productInput},version:${req.body.versionInput}`,JSON.stringify(version_details));
-                        res.render('va/index2',{title: 'Platform Tools', currentUser: req.user?req.user:"", tools: tools,
-                        build_list: release.build, filter_tools: filter_tools, display: data, filter_build: build, version_details: version_details,
-                        rowId: req.body.rowId, platform: req.body.platformInput, product: req.body.productInput});
-                      });
-                    }
-                  });
-                });
-              }
-            });
-        } else {
-          client.get(`code:${code}`,async (error, redis_display_data) => {
-            if(error) console.log(error);
-            if(redis_display_data != null){
-              console.log('display cache hit');
-
-              res.render('va/index2',{title: 'Platform Tools', currentUser: req.user?req.user:"", tools: tools,
-              build_list: release.build, filter_tools: filter_tools, display: JSON.parse(redis_display_data), filter_build: build, version_details: {},
-              rowId: "", platform: "", product: ""});
-            } else {
-              console.log('display cache miss');
-
-              Display.find({code: code}, (err, data) => {
-                if (err) return console.log(err);
-                client.set(`code:${code}`,JSON.stringify(data));
-                res.render('va/index2',{title: 'Platform Tools', currentUser: req.user?req.user:"", tools: tools,
-                build_list: release.build, filter_tools: filter_tools, display: data, filter_build: build, version_details: {},
-                rowId: "", platform: "", product: ""});
-              });
-            }
-          });
-        }
-    });
-  });
+// Define function for getting version details
+async function getVersionDetails(product, version) {
+  let redis_version_data = await getAsync(`product:${product},version:${version}`);
+  
+  if (redis_version_data != null) {
+    console.log('version cache hit');
+    return JSON.parse(redis_version_data);
+  } else {
+    console.log('version cache miss');
+    let product_details = await Product.findOne({ name: product }, 'version');
+    let version_details = product_details.version.filter(x => x.name === version)[0];
+    await setAsync(`product:${product},version:${version}`, JSON.stringify(version_details));
+    return version_details;
+  }
 }
 
-/*module.exports.post_index2 =  (req, res) => {
-  console.log('got post request');
-  var tools = req.params.tools.split('-').join(' ');
-  var filter_tools = tools.split("+")[0];
-  console.log("body:")
-  console.log(req.body);
-  var build = req.body.build.split("+")[0];
-  var code = parseInt(tools.split("+")[1]) + 0.01 * (parseInt(req.body.build.split("+")[1]));
-
-  Release.find({}, "toolsVersion", (err, tools) => {
-    if (err) return handleError(err);
-    Release.findOne({toolsVersion: filter_tools}, "build", (err, release) => {
-      if (err) return handleError(err);
-      if(build === 'All')
-      Display.find({toolsRelease: filter_tools}, (err, data) => {
-        if (err) return console.log(err);
-        res.render('va/index2',{title: 'Platform Tools', currentUser: req.user?req.user:"", tools: tools,
-          build_list: release.build, filter_tools: filter_tools, display: data, filter_build: build, version_details: {},
-           rowId: "", platform: "", product: ""});
+// Define main function
+module.exports.post_index2 = async (req, res) => {
+  try {
+    let tools = req.params.tools.split('-').join(' ');
+    let filter_tools = tools.split('+')[0];
+    console.log('body:');
+    console.log(req.body);
+    console.log('new file');
+    let build = req.body.build.split('+').length === 3 ? 'Latest' : req.body.build.split('+')[0];
+    let code = parseInt(tools.split('+')[1]) + 0.01 * parseInt(req.body.build.split('+')[1]);
+    
+    let releases = await Release.find({}, 'toolsVersion');
+    let release = await Release.findOne({ toolsVersion: filter_tools }, 'build');
+    
+    if (req.body.productInput) {
+      let display = await getDisplayData(code);
+      let version_details = await getVersionDetails(req.body.productInput, req.body.versionInput);
+      
+      res.render('va/index2', {
+        title: 'Platform Tools',
+        currentUser: req.user ? req.user : '',
+        tools: releases,
+        build_list: release.build,
+        filter_tools,
+        display,
+        filter_build: build,
+        version_details,
+        rowId: req.body.rowId,
+        platform: req.body.platformInput,
+        product: req.body.productInput
       });
-      else
-      {
-        if(req.body.productInput){
-          Display.find({code: code}, (err, data) => {
-            if (err) return console.log(err);
-             client.get(`product:${req.body.productInput},version:${req.body.versionInput}`,async (error, redis_data) => {
-              if(error) console.log(error);
-              if(redis_data != null){
-                console.log('cache hit');
-                res.render('va/index2',{title: 'Platform Tools', currentUser: req.user?req.user:"", tools: tools,
-                build_list: release.build, filter_tools: filter_tools, display: data, filter_build: build, version_details: JSON.parse(redis_data),
-                rowId: req.body.rowId, platform: req.body.platformInput, product: req.body.productInput});
-              } else {
-                console.log('cache miss');
-                 Product.findOne({name: req.body.productInput},"version", (err, product_details) => {
-                  if (err) return console.log(err);
-                  let version_details = product_details.version.filter(x => (x.name === req.body.versionInput))[0];                  
-                  client.set(`product:${req.body.productInput},version:${req.body.versionInput}`,JSON.stringify(version_details));
-                  res.render('va/index2',{title: 'Platform Tools', currentUser: req.user?req.user:"", tools: tools,
-                  build_list: release.build, filter_tools: filter_tools, display: data, filter_build: build, version_details: version_details,
-                   rowId: req.body.rowId, platform: req.body.platformInput, product: req.body.productInput});
-                });
-              }
-            });
-            
-          });
-        }
-        else{
-          Display.find({code: code}, (err, data) => {
-            if (err) return console.log(err);
-            res.render('va/index2',{title: 'Platform Tools', currentUser: req.user?req.user:"", tools: tools,
-              build_list: release.build, filter_tools: filter_tools, display: data, filter_build: build, version_details: {},
-               rowId: "", platform: "", product: ""});
-          });
-        }
-      }
-    });
-  });
-}
- */
-
-/*module.exports.post_index2 = (req, res) => {
-  console.log('got post request');
-  var tools = req.params.tools.split('-').join(' ');
-  var filter_tools = tools.split("+")[0];
-  console.log("body:")
-  console.log(req.body);
-  var build = req.body.build.split("+")[0];
-  var code = parseInt(tools.split("+")[1]) + 0.01 * (parseInt(req.body.build.split("+")[1]));
-
-  Release.find({}, "toolsVersion", (err, tools) => {
-    if (err) return handleError(err);
-    Release.findOne({toolsVersion: filter_tools}, "build", (err, release) => {
-      if (err) return handleError(err);
-      if(build === 'All')
-      Display.find({toolsRelease: filter_tools}, (err, data) => {
-        if (err) return console.log(err);
-        res.render('va/index2',{title: 'Platform Tools', currentUser: req.user?req.user:"", tools: tools,
-          build_list: release.build, filter_tools: filter_tools, display: data, filter_build: build, version_details: {},
-           rowId: "", platform: "", product: ""});
+    } else {
+      let display = await getDisplayData(code);
+      
+      res.render('va/index2', {
+        title: 'Platform Tools',
+        currentUser: req.user ? req.user : '',
+        tools: releases,
+        build_list: release.build,
+        filter_tools,
+        display,
+        filter_build: build,
+        version_details: {},
+        rowId: '',
+        platform: '',
+        product: ''
       });
-      else
-      {
-        if(req.body.productInput){
-          Display.find({code: code}, (err, data) => {
-            if (err) return console.log(err);
-            Product.findOne({name: req.body.productInput},"version", (err, product_details) => {
-              if (err) return console.log(err);
-              let version_details = product_details.version.filter(x => (x.name === req.body.versionInput))[0];
-              console.log("version_details",version_details);
-              res.render('va/index2',{title: 'Platform Tools', currentUser: req.user?req.user:"", tools: tools,
-              build_list: release.build, filter_tools: filter_tools, display: data, filter_build: build, version_details: version_details,
-               rowId: req.body.rowId, platform: req.body.platformInput, product: req.body.productInput});
-            });
-          });
-        }
-        else{
-          Display.find({code: code}, (err, data) => {
-            if (err) return console.log(err);
-            res.render('va/index2',{title: 'Platform Tools', currentUser: req.user?req.user:"", tools: tools,
-              build_list: release.build, filter_tools: filter_tools, display: data, filter_build: build, version_details: {},
-               rowId: "", platform: "", product: ""});
-          });
-        }
-      }
-    });
-  });
-} */
-module.exports.get_index_history = (req, res) => {
-  var filter_product = req.params.product.split('-').join(' ') ;
-  var filter_platform = req.params.platform.split('-').join(' ') ;
-  History.find({product: filter_product, platform: filter_platform}, (err, history) => {
-    if (err) return handleError(err);
-    res.render('va/history',{title: 'Configure', currentUser: req.user?req.user:"", history: history, filter_product: filter_product, filter_platform: filter_platform});
-  });
+    }
+  } catch (err) {
+    console.log(err);
+    return res.status(500).send('Internal Server Error');
+  }
 }
+
+  
+module.exports.get_index_history = async (req, res, next) => {
+    try {
+      const filter_product = req.params.product.split('-').join(' ');
+      const filter_platform = req.params.platform.split('-').join(' ');
+      const history = await History.find({ product: filter_product, platform: filter_platform });
+      res.render('va/history', {
+        title: 'Configure',
+        currentUser: req.user || '',
+        history,
+        filter_product,
+        filter_platform,
+      });
+    } catch (error) {
+      next(error);
+    }
+};
 
 module.exports.filter = (req, res) => {
-      res.render('va/filterByProduct',{ title: 'Filter By Product', currentUser: req.user?req.user:""});
-}
-
-//-----------------------------------------------------//
-
+    const currentUser = req.user || '';
+    res.render('va/filterByProduct', {
+      title: 'Filter By Product',
+      currentUser,
+    });
+};
+  
 module.exports.get_configure = (req, res) => {
-  res.render('config/configure',{title: 'Configure', currentUser: req.user?req.user:""});
-}
-
-module.exports.get_ownership = (req, res) => {
-
-  User.findOne({email: req.user.email}, "requested owned", (err, loggedInUser) => {
-    if (err) return handleError(err);
-    Product.find({}, "name version", (err, result) => {
-      if (err) return handleError(err);
-      res.render('config/ownership',{title: 'Configure', currentUser: req.user?req.user:"", product: result,requested: loggedInUser.requested, owned: loggedInUser.owned});
+    const currentUser = req.user || '';
+    res.render('config/configure', {
+      title: 'Configure',
+      currentUser,
     });
-
-  });
-
-}
-
-module.exports.get_product = (req, res) => {
-  User.findOne({email: req.user.email}, "owned", (err, loggedInUser) => {
-    if (err) return handleError(err);
-      res.render('config/productVersion',{title: 'Configure', currentUser: req.user?req.user:"",owned: loggedInUser.owned});
-  });
-}
-
-module.exports.get_product_details = (req, res) => {
-  var filter_product = req.params.product.split('-').join(' ') ;
-  User.findOne({email: req.user.email}, "owned", (err, loggedInUser) => {
-    if (err) return handleError(err);
-    Product.findOne({name: filter_product}, "name version", (err, result) => {
-      if (err) return handleError(err);
-      res.render('config/addProductVersion',{title: 'Configure', currentUser: req.user?req.user:"", owned: loggedInUser.owned, name: result.name, version: result.version });
-    });
-  });
-}
-
-module.exports.get_define = (req, res) => {
-  User.findOne({email: req.user.email}, "owned", (err, loggedInUser) => {
-    if (err) return handleError(err);
-    Release.find({}, "toolsVersion", (err, tools) => {
-      if (err) return handleError(err);
-        res.render('config/defineRelationship',{title: 'Configure', currentUser: req.user?req.user:"", owned: loggedInUser.owned, tools: tools});
-    });
-  });
-}
-
-module.exports.get_define_details = (req, res) => {
-  var tools = req.params.tools.split('-').join(' ');
-  var toolsReleaseArray = tools.split("+"); 
-  var filter_tools = toolsReleaseArray[0];
-  var filter_product = req.params.product.split('-').join(' ');
-  User.findOne({email: req.user.email}, "owned", (err, loggedInUser) => {
-    if (err) return handleError(err);
-    Release.find({}, "toolsVersion", (err, tools) => {
-      if (err) return handleError(err);
-      Release.findOne({toolsVersion: filter_tools}, "build", (err, release) => {
-        if (err) return handleError(err);
-        Platform.find({},"name", (err, platform_list) => {
-          if (err) return handleError(err);
-          Product.findOne({name: filter_product}, "version", (err, version_list) => {
-            if (err) return handleError(err);    
-            Present.find({product: filter_product}, (err, present_list) => {
-              if (err) return handleError(err);
-              res.render('config/addDefineRelationship',{title: 'Configure', currentUser: req.user?req.user:"", 
-              filter_tools: filter_tools, filter_product, filter_product,
-              owned: loggedInUser.owned, tools: tools, platform_list: platform_list, build_list: release.build,
-              version_list: version_list.version, present_list: present_list});
-            });
-          });
-        });
-      });
-    });
-  });
-}
-
-module.exports.get_history = (req, res) => {
-  var filter_product = req.params.product.split('-').join(' ') ;
-  History.find({product: filter_product}, (err, history) => {
-    if (err) return handleError(err);
-    res.render('config/productHistory',{title: 'Configure', currentUser: req.user?req.user:"", history: history, filter_product: filter_product});
-  });
-}
-
-module.exports.get_account = (req, res) => {
-  User.findOne({email: req.user.email}, "owned", (err, loggedInUser) => {
-    if (err) console.log(err);
-    res.render('config/accountSettings',{title: 'Configure', currentUser: req.user?req.user:"", owned: loggedInUser.owned});
-  });
-}
-
-module.exports.post_ownership = (req, res) => {
-  if(Object.keys(req.body).length === 0)
-    res.redirect('/configure/ownership');
-  //-------------add request----------------------//
-  if(req.body.addprod){
-    var addprodlist = typeof(req.body.addprod) === 'object'?req.body.addprod:[req.body.addprod];
-    for(var i = 0; i < addprodlist.length; i++){
-      const request_instance = new Request({ product: addprodlist[i], email: req.user.email});
-      request_instance.save((err) => {
-        if (err) return handleError(err);
-      });
-    }
-    User.findOneAndUpdate({email: req.user.email}, { $push: { requested: addprodlist } } , (err, result) => {
-      if (err) return handleError(err); 
-      res.redirect('/configure/ownership');
-    });
-    }
-//--------------delete request-----------------------//
-  if(req.body.delprod){
-    var delprodlist = typeof(req.body.delprod) === 'object'?req.body.delprod:[req.body.delprod];
-  for(var i = 0; i < delprodlist.length; i++){
-    Request.deleteOne({ product: delprodlist[i], email: req.user.email}, (err, result) => {
-      if (err) return handleError(err); 
-    });
-  }
-  User.findOneAndUpdate({email: req.user.email}, { $pullAll: { requested: delprodlist } }, (err, result) => {
-    if (err) return handleError(err);
-    res.redirect('/configure/ownership');
-  });
-  }
-}
-
-module.exports.post_add_version = (req, res) => {
-  var product = req.params.product.split('-').join(' ')  
-  if(!req.body.deleteVersion) ///  add
-  {
-    Product.findOneAndUpdate({name: product}, { $pull: { version: {"name" : req.body.version}} }, (err, result) => {
-      Product.findOneAndUpdate({name: product}, {$push: { version: {"name" : req.body.version, "major": req.body.majorVersion, "startdate": req.body.startDate,"enddate": req.body.endDate,"bitness": req.body.bitness, "downloadLink": req.body.downloadLink, "discription": req.body.discription, "location": req.body.location, "notes": req.body.notes}} }, (err, result2) => {
-       let version_details =  {"name" : req.body.version, 
-                              "major": req.body.majorVersion, 
-                              "startdate": req.body.startDate,
-                              "enddate": req.body.endDate,
-                              "bitness": req.body.bitness, 
-                              "downloadLink": req.body.downloadLink, 
-                              "discription": req.body.discription,
-                              "location": req.body.location,
-                              "notes":req.body.notes};
-        client.set(`product:${product},version:${req.body.version}`,JSON.stringify(version_details));
-        res.redirect('/configure/product/' + product);
-        if (err) console.log(err);  
-      });
-      if (err) console.log(err); 
-    });
-  }
+};
   
-  if(req.body.deleteVersion) /// delete
-    Product.findOneAndUpdate({name: product}, { $pull: { version: {"name" : req.body.deleteVersion}} }, (err, result) => {
-      Display.deleteMany({product: product, version: req.body.deleteVersion}, (err, result) => {
-        if(err) console.log(err);
+module.exports.get_ownership = async (req, res, next) => {
+    try {
+      const loggedInUser = await User.findOne({ email: req.user.email }, 'requested owned message');
+      await User.findOneAndUpdate({ email: req.user.email }, {$set: { message: [] }});
+      const result = await Product.find({}, 'name version');
+      const currentUser = req.user || '';
+      console.log('loggedInUser.message', loggedInUser.message);
+
+      res.render('config/ownership', {
+        title: 'Configure',
+        currentUser,
+        product: result,
+        requested: loggedInUser.requested,
+        owned: loggedInUser.owned,
+        messages: loggedInUser.message
       });
-      Present.deleteMany({product: product, version: req.body.deleteVersion}, (err, result) => {
-        if(err) console.log(err);
+    } catch (error) {
+      next(error);
+    }
+};
+
+module.exports.get_product = async (req, res, next) => {
+    try {
+      const loggedInUser = await User.findOne({ email: req.user.email }, 'owned');
+      const currentUser = req.user || '';
+      res.render('config/productVersion', {
+        title: 'Configure',
+        currentUser,
+        owned: loggedInUser.owned,
       });
-      /*const history_instance = new History({code: -1, product: product, toolsRelease: "", build: "", 
-        platform: "All Platform", version: req.body.deleteVersion, action: "Version removed from VA"});
-      history_instance.save((err) => {
-        if (err) console.log(err);
-      });*/
-      
-      client.del(`product:${product},version:${req.body.deleteVersion}`);
-      res.redirect('/configure/product/' + product);
-      if (err) return handleError(err); 
-  });
-}
+    } catch (error) {
+      next(error);
+    }
+};
 
-module.exports.post_define = (req, res) => {
-  var toolsReleaseArray = req.body.toolsVersion.split("+"); 
-  var toolsRelease = toolsReleaseArray[0];
-  res.redirect('/configure/define/' + toolsRelease.split(' ').join('-') + '/' + req.body.product.split(' ').join('-'));
-}
 
-module.exports.post_commit = (req, res) => {
-    var toolsReleaseArray = req.body.toolsVersion.split("+"); 
-    var buildArray = req.body.build.split("+");
-  
-    var build = buildArray[0];
-    var toolsRelease = toolsReleaseArray[0];
+module.exports.get_product_details = async (req, res, next) => {
+    try {
+      const filter_product = req.params.product.split('-').join(' ');
+      const loggedInUser = await User.findOne({ email: req.user.email }, 'owned');
+      const result = await Product.findOne({ name: filter_product }, 'name version');
+      let used = await Data.findOne({}, 'usedArray');
+      const currentUser = req.user || '';
+      console.log(used);
 
-    var code = parseInt(toolsReleaseArray[1]) + 0.01 * (parseInt(buildArray[1]));
+      res.render('config/addProductVersion', {
+        title: 'Configure',
+        currentUser,
+        owned: loggedInUser.owned,
+        name: result.name,
+        version: result.version,
+        used: used.usedArray
+      });
+    } catch (error) {
+      next(error);
+    }
+};
 
-    //-------------------------------------------------------------------------------------------------------------------//
+module.exports.get_define = async (req, res) => {
+  try {
+    const loggedInUser = await User.findOne({ email: req.user.email }, 'owned');
+    const tools = await Release.find({}, 'toolsVersion');
+    res.render('config/defineRelationship', {
+      title: 'Configure',
+      currentUser: req.user || '',
+      owned: loggedInUser.owned,
+      tools,
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('Internal Server Error');
+  }
+};
 
-    Data.findOne({}, "codeArray", (err, result) => {
-      if (err) return console.log(err);
-      var codeArray = result.codeArray;
 
-      // console.log("codeArray")
-      // console.log(codeArray);
-
-      codeArray.sort();
-
-      // console.log("codeArray")
-      // console.log(codeArray);
-
-      codeArray = codeArray.filter(x => x >= code)
-
-      // console.log("codeArray")
-      // console.log(codeArray);
-
-      for(let i = 0; i < codeArray.length; i++)
-      {
-        client.del(`code:${codeArray[i]}`);
-        if(req.body.action === "Support"){
-          const display_instance = new Display({code: codeArray[i], product: req.body.product,
-            platform: req.body.platform, version: req.body.productVersion});
-            display_instance.save((err) => {
-            if (err) console.log(err);
-          });
-        }
+module.exports.get_define_details = async (req, res) => {
+  try {
+    const tools = req.params.tools.split('-').join(' ');
+    const toolsReleaseArray = tools.split("+"); 
+    const filter_tools = toolsReleaseArray[0];
+    const filter_product = req.params.product.split('-').join(' ');
+    const currentUser = req.user || '';
     
-        if(req.body.action === "Deprecate"){
-          Display.findOneAndDelete({code: codeArray[i], product: req.body.product, 
-            platform: req.body.platform, version: req.body.productVersion}, (err, result) => {
-              if (err) return handleError(err); 
-          }); 
-        }
+    const loggedInUser = await User.findOne({ email: req.user.email }, "owned");
+    const toolsList = await Release.find({}, "toolsVersion");
+    const release = await Release.findOne({ toolsVersion: filter_tools }, "build");
+    const platformList = await Platform.find({}, "name");
+    const versionList = await Product.findOne({ name: filter_product }, "version");
+    const presentList = await Present.find({ product: filter_product });
+
+    res.render('config/addDefineRelationship', {
+      title: 'Configure',
+      currentUser,
+      filter_tools,
+      filter_product,
+      owned: loggedInUser.owned,
+      tools: toolsList,
+      platform_list: platformList,
+      build_list: release.build,
+      version_list: versionList.version,
+      present_list: presentList
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('Internal Server Error');
+  }
+}
+
+module.exports.get_history = async (req, res) => {
+    try {
+      const filter_product = req.params.product.split('-').join(' ');
+      const currentUser = req.user || '';
+
+      const history = await History.find({ product: filter_product });
+      res.render('config/productHistory', {
+        title: 'Configure',
+        currentUser,
+        history: history,
+        filter_product: filter_product,
+      });
+    } catch (err) {
+      console.error(err);
+      res.status(500).send('Internal Server Error');
+    }
+}
+
+module.exports.get_account = async (req, res) => {
+    try {
+      const loggedInUser = await User.findOne({email: req.user.email}, "owned");
+      const owned = loggedInUser.owned;
+      const currentUser = req.user || '';
+  
+      res.render('config/accountSettings', {
+        title: 'Configure',
+        currentUser,
+        owned,
+      });
+    } catch (error) {
+      console.error(error);
+      res.status(500).send('Internal Server Error');
+    }
+}
+  
+module.exports.post_ownership = async (req, res) => {
+    try {
+      if (Object.keys(req.body).length === 0) {
+        return res.redirect('/configure/ownership');
       }
 
-    });
+      console.log(req.user.name);
+      const userEmail = req.user.email;
+      const userName= req.user.name;
 
-    //-------------------------------------------------------------------------------------------------------------------//
-
-    const history_instance = new History({code: code, product: req.body.product, toolsRelease: toolsRelease, build: build, 
-      platform: req.body.platform, version: req.body.productVersion, action: req.body.action});
-    history_instance.save((err) => {
-      if (err) console.log(err);
-    });
-
-    if(req.body.action === "Support"){
-      const present_instance = new Present({code: code, product: req.body.product, toolsRelease: toolsRelease, build: build,
-        platform: req.body.platform, version: req.body.productVersion});
-        present_instance.save((err) => {
-        if (err) console.log(err);
-      });
+      if (req.body.addprod) {
+        const addProdList = typeof(req.body.addprod) === 'object'?req.body.addprod:[req.body.addprod];
+  
+        for (let i = 0; i < addProdList.length; i++) {
+          const requestInstance = new Request({ product: addProdList[i], email: userEmail, name: userName});
+          await requestInstance.save();
+        }
+  
+        await User.findOneAndUpdate({ email: userEmail }, { $push: { requested: addProdList } });
+        return res.redirect('/configure/ownership');
+      }
+  
+      if (req.body.delprod) {
+        const delProdList = typeof(req.body.delprod) === 'object'?req.body.delprod:[req.body.delprod];
+  
+        for (let i = 0; i < delProdList.length; i++) {
+          await Request.deleteOne({ product: delProdList[i], email: userEmail ,name: userName});
+        }
+  
+        await User.findOneAndUpdate({ email: userEmail }, { $pullAll: { requested: delProdList } });
+        return res.redirect('/configure/ownership');
+      }
+  
+      res.redirect('/configure/ownership');
+    } catch (error) {
+        console.error(error);
+        res.status(500).send('Internal Server Error');
     }
+  }
+  
 
-    if(req.body.action === "Deprecate"){
-      Present.findOneAndDelete({product: req.body.product, platform: req.body.platform, version: req.body.productVersion}, (err, result) => {
-          if (err) return handleError(err); 
-      }); 
+module.exports.post_add_version = async (req, res) => {
+    try {
+        const product = req.params.product.split('-').join(' ');
+        const versionDetails = {
+          name: req.body.version,
+          major: req.body.majorVersion,
+          startdate: req.body.startDate,
+          enddate: req.body.endDate,
+          bitness: req.body.bitness,
+          downloadLink: req.body.downloadLink,
+          discription: req.body.discription,
+          location: req.body.location,
+          notes: req.body.notes,
+        };
+
+        if (!req.body.deleteVersion) {
+        // add
+        const result = await Product.findOneAndUpdate( { name: product },{ $pull: { version: { name: req.body.version } } });
+        const result2 = await Product.findOneAndUpdate( { name: product }, { $push: { version: versionDetails } });
+
+        client.set(`product:${product},version:${req.body.version}`, JSON.stringify(versionDetails));
+        res.redirect('/configure/product/' + product);
+        } else {
+        // delete
+        const result = await Product.findOneAndUpdate({ name: product },{ $pull: { version: { name: req.body.deleteVersion } } });
+        client.del(`product:${product},version:${req.body.deleteVersion}`);
+        res.redirect('/configure/product/' + product);
+        }
+    } catch (err) {
+        console.log(err);
+        res.status(500).send('Internal Server Error');
     }
-
-    res.redirect('/configure/define/' + req.body.toolsVersion.split(' ').join('-') + '/' + req.body.product.split(' ').join('-'));
+};
+  
+module.exports.post_define = async (req, res) => {
+    try {
+        const toolsReleaseArray = req.body.toolsVersion.split("+"); 
+        const toolsRelease = toolsReleaseArray[0];
+        const product = req.body.product.split(' ').join('-');
+        const toolsReleaseFormatted = toolsRelease.split(' ').join('-');
+        res.redirect(`/configure/define/${toolsReleaseFormatted}/${product}`);
+    } catch (error) {
+        console.error(error);
+        res.status(500).send('Internal Server Error');
+    }
 }
 
-module.exports.post_history = (req, res) => {
-  History.deleteOne({_id: req.body.historyId}, (err, history) => {
-    if (err) return handleError(err);
-    res.redirect('/configure/history/' + req.params.product);
-  });
+module.exports.post_commit = async (req, res) => {
+    try {
+      const toolsReleaseArray = req.body.toolsVersion.split("+"); 
+      const buildArray = req.body.build.split("+");
+      const build = buildArray[0];
+      const toolsRelease = toolsReleaseArray[0];
+      const code = parseInt(toolsReleaseArray[1]) + 0.01 * parseInt(buildArray[1]);
+      const result = await Data.findOne({}, "codeArray");
+      const codeArray = result.codeArray;
+      codeArray.sort();
+      const filteredCodeArray = codeArray.filter(x => x >= code);
+
+  
+      for(let i = 0; i < filteredCodeArray.length; i++) {
+        await client.del(`code:${filteredCodeArray[i]}`);
+        if(req.body.action === "Support") {
+          const display_instance = new Display({code: filteredCodeArray[i], product: req.body.product,
+            platform: req.body.platform, version: req.body.productVersion});
+          await display_instance.save();
+        }
+        if(req.body.action === "Deprecate") {
+          await Display.findOneAndDelete({code: filteredCodeArray[i], product: req.body.product, 
+            platform: req.body.platform, version: req.body.productVersion});
+        }
+      }
+  
+      const history_instance = new History({code: code, product: req.body.product, toolsRelease: toolsRelease, build: build, 
+        platform: req.body.platform, version: req.body.productVersion, action: req.body.action});
+      await history_instance.save();
+  
+      if(req.body.action === "Support") {
+        await Data.updateOne({}, { $push: { usedArray: req.body.productVersion } });
+        const present_instance = new Present({code: code, product: req.body.product, toolsRelease: toolsRelease, build: build,
+          platform: req.body.platform, version: req.body.productVersion});
+        await present_instance.save();
+      }
+  
+      if(req.body.action === "Deprecate") {
+        await Data.updateOne({}, { $pull: { usedArray: req.body.productVersion } });
+        await Present.findOneAndDelete({product: req.body.product, platform: req.body.platform, version: req.body.productVersion});
+      }
+  
+      res.redirect(`/configure/define/${toolsRelease.split(' ').join('-')}/${req.body.product.split(' ').join('-')}`);
+    } catch (error) {
+        console.error(error);
+        res.status(500).send("Internal server error");
+    }
+  };
+  
+
+module.exports.post_history = async (req, res) => {
+    try {
+        await History.deleteOne({_id: req.body.historyId});
+        res.redirect(`/configure/history/${req.params.product}`);
+    } catch (err) {
+        console.log(err);
+        res.status(500).send("Internal Server Error");
+    }
 }
+  
+  

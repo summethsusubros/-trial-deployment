@@ -1,5 +1,5 @@
 const { Router } = require('express');
-const adminController = require('../controllers/admin2Controller');
+const adminController = require('../controllers/adminController');
 const User = require('../models/User');
 
 const router = Router();
@@ -11,7 +11,6 @@ function isLoggedIn(req, res, next) {
 function isAdmin(req, res, next) {
     User.findOne({email: req.user.email}, "role", (err, loggedInUser) => {
         if (err) return handleError(err);
-        //console.log(loggedInUser);
         loggedInUser.role.includes('admin') ? next() : res.sendStatus(401);
     }); 
 }

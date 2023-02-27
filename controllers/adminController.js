@@ -6,228 +6,287 @@ const Platform = require('../models/Platform');
 const Data = require('../models/Data');
 const Display = require('../models/Display');
 
-module.exports.getAdministrate = (req, res) => {
-    Request.find({}, "product email", (err, request_list) => {
-      if (err) return handleError(err);
-      User.find({ "role.1" : { "$exists": true } }, "email" , (err, admin_list) => {
-        if (err) return handleError(err);
-          Product.find({},"name", (err, product_list) => {
-            if (err) return handleError(err);
-             Platform.find({},"name", (err, platform_list) => {
-               if (err) return handleError(err);
-                Release.find({},"toolsVersion", (err, release_list) => {
-                  if (err) return handleError(err);
-                  res.render('admin/administrate',{title: 'Administrate', currentUser: req.user?req.user:"",
-                  request_list: request_list, admin_list: admin_list, product_list: product_list, 
-                  platform_list: platform_list, release_list: release_list, build_list: [], filter_tools: ""});
-                });
-             });
-          });
+
+module.exports.getAdministrate = async (req, res) => {
+    try {
+      const request_list = await Request.find({}, "product email name");
+      const admin_list = await User.find({ "role.1": { "$exists": true } }, "email");
+      const product_list = await Product.find({}, "name");
+      const platform_list = await Platform.find({}, "name");
+      const release_list = await Release.find({}, "toolsVersion");
+  
+      res.render("admin/administrate", {
+        title: "Administrate",
+        currentUser: req.user ? req.user : "",
+        request_list,
+        admin_list,
+        product_list,
+        platform_list,
+        release_list,
+        build_list: [],
+        filter_tools: "",
       });
-    });
+    } catch (err) {
+      handleError(err);
+    }
+};
+
+module.exports.postAdministrateAddProducts = async (req, res) => {
+    try {
+      const product_name = req.body.product_name;
+      if (!product_name) {
+        return res.redirect('/administrate');
+      }
+  
+      const isProductExists = await Product.exists({ name: product_name });
+      if (isProductExists) {
+        return res.redirect('/administrate');
+      }
+  
+      const product_instance = new Product({ name: product_name });
+      await product_instance.save();
+  
+      res.redirect('/administrate');
+    } catch (err) {
+      console.error(err);
+      res.redirect('/administrate');
+    }
 }
-
-module.exports.postAdministrateAddProducts = (req, res) => {
-  if(!req.body.product_name)
-    res.redirect('/administrate');
-
-  if(req.body.product_name){
-    let name = req.body.product_name;
-    Product.exists({name: name}, function (err, doc) {
-      if (err) console.log(err);
-      else{
-        if(doc)
+  
+module.exports.postAdministrateAddAdmin = async (req, res) => {
+    try {
+        const admin_email = req.body.admin_email;
+        if (!admin_email) {
+            return res.redirect('/administrate');
+        }
+        await User.findOneAndUpdate({ email: admin_email },{ $pull: { role: 'admin' } });
+        await User.findOneAndUpdate({ email: admin_email },{ $push: { role: 'admin' } });
         res.redirect('/administrate');
-        else{
-          const product_instance = new Product({ name: name});
-          product_instance.save((err) => {
-            if (err) console.error(err);
-          });
-          res.redirect('/administrate');
-        }
+    }   catch (err) {
+        console.error(err);
+        res.redirect('/administrate');
+    }
+};
+
+module.exports.postAdministrateApproveManager = async (req, res) => {
+    try {
+      const email = req.body.email;
+      const product = req.body.product;
+      await User.findOneAndUpdate({ email },{ $push: { owned: product }, $pull: { requested: product }});
+      await User.findOneAndUpdate({ email },{ $push: { message: `Admin have approved your request to own ${product}` }});
+      await Request.deleteOne({ product, email });
+      res.redirect('/administrate');
+    } catch (err) {
+      console.error(err);
+      res.redirect('/administrate');
+    }
+};
+
+module.exports.postAdministrateDeclineManager = async (req, res) => {
+    try {
+      const email = req.body.email;
+      const product = req.body.product;
+      await User.findOneAndUpdate({ email },{ $pull: { requested: product } });
+      await User.findOneAndUpdate({ email },{ $push: { message: `Admin have declined your request to own ${product}` }});
+      await Request.deleteOne({ product, email });
+      res.redirect('/administrate');
+    } catch (err) {
+      console.error(err);
+      res.redirect('/administrate');
+    }
+};
+
+/*module.exports.postAdministrateApproveManager = async (req, res) => {
+    try {
+      const email = req.body.email;
+      const product = req.body.product;
+      await User.findOneAndUpdate({ email },{ $push: { owned: product }, $pull: { requested: product }, });
+      await Request.deleteOne({ product, email });
+      res.redirect('/administrate');
+    } catch (err) {
+      console.error(err);
+      res.redirect('/administrate');
+    }
+};
+
+module.exports.postAdministrateDeclineManager = async (req, res) => {
+    try {
+      const email = req.body.email;
+      const product = req.body.product;
+      await User.findOneAndUpdate({ email },{ $pull: { requested: product }, $push: { message: `Admin have declined your request to own ${product}` }});
+      await Request.deleteOne({ product, email });
+      res.redirect('/administrate');
+    } catch (err) {
+      console.error(err);
+      res.redirect('/administrate');
+    }
+}; */
+  
+module.exports.postAdministrateAddPlatforms = async (req, res) => {
+    const platform_name = req.body.platform_name;
+    if (!platform_name) {
+      return res.redirect('/administrate');
+    }
+    try {
+      const exists = await Platform.exists({ name: platform_name });
+      if (exists) {
+        return res.redirect('/administrate/#platform_name');
       }
-    });
-  }
-}
+      const platform_instance = new Platform({ name: platform_name });
+      await platform_instance.save();
+      return res.redirect('/administrate/#platform_name');
+    } catch (error) {
+      console.error(error);
+      return res.redirect('/administrate');
+    }
+};
 
-module.exports.postAdministrateAddAdmin = (req, res) => {
-  if(!req.body.admin_email)
-    res.redirect('/administrate');
-  if(req.body.admin_email){
-    User.findOneAndUpdate({email: req.body.admin_email}, {$pull: { role: 'admin' } } , (err, result) => {
-        if (err) return handleError(err);
-        User.findOneAndUpdate({email: req.body.admin_email}, {$push: { role: 'admin' } } , (err, result) => {
-          if (err) return handleError(err);
-      });
-    });
-    res.redirect('/administrate');
-  }
-}
-
-module.exports.postAdministrateApproveManager = (req, res) => {
-  User.findOneAndUpdate({email: req.body.email}, {$push: { owned: req.body.product } , $pull: { requested: req.body.product } } , (err, loggedInUser) => {
-    if (err) return handleError(err);
-  });
-  Request.deleteOne({ product: req.body.product, email: req.body.email}, (err, result) => {
-    if (err) return handleError(err); 
-  });
-  res.redirect('/administrate');
-}
-
-module.exports.postAdministrateDeclineManager = (req, res) => {
-  User.findOneAndUpdate({email: req.body.email}, { $pull: { requested: req.body.product } } , (err, loggedInUser) => {
-    if (err) return handleError(err);
-  });
-  Request.deleteOne({ product: req.body.product, email: req.body.email}, (err, result) => {
-    if (err) return handleError(err); 
-  });
-  res.redirect('/administrate');
-}
-
-module.exports.postAdministrateAddPlatforms = (req, res) => {
-  if(!req.body.platform_name)
-    res.redirect('/administrate');
-  if(req.body.platform_name){
-    let name = req.body.platform_name;
-    Platform.exists({name: name}, function (err, doc) {
-      if (err) console.log(err);
-      else{
-        if(doc)
-          res.redirect('/administrate/#platform_name');  
-        else{
-          const platform_instance = new Platform({ name: name});
-          platform_instance.save((err) => {
-            if (err) console.log(err);
-          });
-          res.redirect('/administrate/#platform_name');
-        }
+module.exports.postAdministrateAddTools = async (req, res) => {
+    const tools_name = req.body.tools_name;
+  
+    if (!tools_name) {
+      return res.redirect('/administrate');
+    }
+  
+    try {
+      const existingRelease = await Release.findOne({ toolsVersion: tools_name });
+  
+      if (existingRelease) {
+        return res.redirect('/administrate/#tools_name');
       }
+  
+      const count = await Release.countDocuments();
+      const releaseCode = count + 1;
+  
+      const release = new Release({ toolsVersion: tools_name, build: [], releaseCode });
+      await release.save();
+  
+      return res.redirect('/administrate/#tools_name');
+    } catch (err) {
+      console.error(err);
+      return res.redirect('/administrate');
+    }
+}
+
+module.exports.postAdministratePreAddBuilds = async (req, res) => {
+  try {
+    const filterTools = req.body.tools_version.split("+")[0];
+    const requestList = await Request.find({}, "product email");
+    const adminList = await User.find({ "role.1" : { "$exists": true } }, "email");
+    const productList = await Product.find({}, "name");
+    const platformList = await Platform.find({}, "name");
+    const releaseList = await Release.find({}, "toolsVersion");
+    const builds = await Release.findOne({ toolsVersion: filterTools }, "build");
+    
+    console.log(builds);
+    
+    res.render('admin/administrate', {
+      title: 'Administrate',
+      currentUser: req.user || "",
+      request_list: requestList,
+      admin_list: adminList,
+      product_list: productList,
+      platform_list: platformList,
+      release_list: releaseList,
+      build_list: builds ? builds.build : [],
+      filter_tools: filterTools
     });
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('Internal server error');
   }
 }
 
-module.exports.postAdministrateAddTools = (req, res) => {
-  if(!req.body.tools_name)
-    res.redirect('/administrate');
 
-  if(req.body.tools_name){
-    let name = req.body.tools_name;
-    Release.exists({toolsVersion: name}, function (err, doc) {
-      if (err) console.log(err);
-      else{
-        if(doc)
-          res.redirect('/administrate/#tools_name'); 
-        else{
-          Release.countDocuments({} ,function(err, count){
-            const release_instance = new Release({ toolsVersion: name, build: [], releaseCode: count + 1});
-            release_instance.save((err) => {
-              if (err) return console.log(err);
+module.exports.postAdministrateAddBuilds = async (req, res) => {
+  const build_name = req.body.build_name;
+  const tools_version  = req.body.tools_version;
+
+  if (!build_name) {
+    return res.redirect('/administrate');
+  }
+
+  try {
+    const release = await Release.findOneAndUpdate({ toolsVersion: tools_version },{ $addToSet: { build: build_name } },{ new: true });
+
+    const code = release.releaseCode + 0.01 * release.build.length;
+
+    // Update the Data model
+    const data = await Data.findOneAndUpdate({},{ $addToSet: { codeArray: code } },{ new: true, upsert: true });
+    const sortedCodes = [...data.codeArray].sort();
+    const targetCode = sortedCodes.find((c) => c < code);
+
+    // Update the Display model
+    if (targetCode !== undefined) {
+      const targets = await Display.find({ code: targetCode });
+      const displays = targets.map((t) => ({
+        code,
+        product: t.product,
+        platform: t.platform,
+        version: t.version,
+      }));
+      await Display.insertMany(displays);
+    }
+
+    return res.redirect('/administrate/#tools_version');
+  } catch (error) {
+    console.log(error);
+    return res.redirect('/administrate');
+  }
+};
+
+
+module.exports.postAdministrateAddBuilds = async (req, res) => {
+  if (!req.body.build_name) {
+    return res.redirect('/administrate');
+  }
+
+  const name = req.body.build_name;
+  const toolsReleaseArray = req.body.tools_version.split("+");
+  const toolsVersion = toolsReleaseArray[0];
+
+  try {
+    const result1 = await Release.findOneAndUpdate({ toolsVersion }, { $pull: { build: name } });
+    const result2 = await Release.findOneAndUpdate({ toolsVersion }, { $push: { build: name } });
+    const code = result2.releaseCode + (0.01 * (result2.build.length + 1));
+    const count = await Data.countDocuments();
+
+    if (count) { // Any build exists
+      await Data.updateOne({}, { $pull: { codeArray: code } });
+      await Data.updateOne({}, { $push: { codeArray: code } });
+
+      const exist = await Display.exists({ code });
+      if (!exist) {
+        const result = await Data.findOne({}, "codeArray");
+        const codeArray = result.codeArray;
+        codeArray.sort();
+        const targetCodes = codeArray.filter(x => x < code);
+        if (targetCodes.length > 0) {
+          const targetCode = targetCodes[targetCodes.length - 1];
+          const targetResults = await Display.find({ code: targetCode });
+
+          targetResults.forEach((target) => {
+            const display_instance = new Display({
+              code: code,
+              product: target.product,
+              platform: target.platform,
+              version: target.version
             });
-          });
-          res.redirect('/administrate/#tools_name');
+            display_instance.save((err) => {
+              if (err) console.log(err);
+            });
+          });          
         }
       }
-    });
+    } else { // First build code to be inserted
+      const data_instance = new Data({ codeArray: [code] });
+      await data_instance.save();
+    }
+
+    res.redirect('/administrate/#tools_version');
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('Internal server error');
   }
-}
-
-module.exports.postAdministratePreAddBuilds = (req, res) => {
-
-  let filter_tools = req.body.tools_version.split("+")[0];
-  Request.find({}, "product email", (err, request_list) => {
-    if (err) return handleError(err);
-    User.find({ "role.1" : { "$exists": true } }, "email" , (err, admin_list) => {
-      if (err) return handleError(err);
-        Product.find({},"name", (err, product_list) => {
-          if (err) return handleError(err);
-           Platform.find({},"name", (err, platform_list) => {
-             if (err) return handleError(err);
-              Release.find({},"toolsVersion", (err, release_list) => {
-                if (err) return handleError(err);
-                Release.findOne({toolsVersion: filter_tools}, (err, builds) => {
-                  if (err) return handleError(err);
-                  console.log(builds)
-                  res.render('admin/administrate',{title: 'Administrate', currentUser: req.user?req.user:"",
-                  request_list: request_list, admin_list: admin_list, product_list: product_list, 
-                  platform_list: platform_list, release_list: release_list, build_list: builds.build, filter_tools: filter_tools});
-                });
-              });
-           });
-        });
-    });
-  });
-}
-
-module.exports.postAdministrateAddBuilds = (req, res) => {
-  if(!req.body.build_name)
-   res.redirect('/administrate');
-
-  if(req.body.build_name){
-    let name = req.body.build_name;
-    var toolsReleaseArray = req.body.tools_version.split("+"); 
-    let toolsVersion = toolsReleaseArray[0];
-    Release.findOneAndUpdate({toolsVersion: toolsVersion}, { $pull: { build: name } }, (err, result1) => {
-      if (err) return console.log(err);
-      Release.findOneAndUpdate({toolsVersion: toolsVersion}, { $push: { build: name } }, (err, result2) => {
-      if (err) return console.log(err);
-      let code = result2.releaseCode + (0.01 * (result2.build.length + 1));
-      Data.countDocuments({},  (err, count) => {
-        if (err) return console.log(err);
-        if(count)//ANY build exist
-        {
-
-          Data.findOneAndUpdate({}, { $pull: { codeArray: code } },(err, coderesult1) => {
-            if (err) return console.log(err);
-            Data.findOneAndUpdate({}, { $push: { codeArray: code } },(err, coderesult2) => {
-              if (err) return console.log(err);
-            });
-          });
-
-          Display.countDocuments({code: code},  (err, exist) => {
-            if (err) return console.log(err);
-            if(exist){
-              //do nothing
-            }
-            else{
-              Data.findOne({}, "codeArray", (err, result) => {
-                if (err) return console.log(err);
-                var codeArray = result.codeArray;
-    
-                codeArray.sort();
-                codeArray = codeArray.filter(x => x < code)
-    
-                if(codeArray.length == 0){
-    
-                }
-                else{
-                  let targetcode = codeArray[codeArray.length - 1];
-                  Display.find({code: targetcode}, (err, targetresult) => {
-                    if (err) return console.log(err);
-                    console.log("targetresult:", targetresult);
-                    for(var i = 0; i < targetresult.length; i++){
-                      const display_instance = new Display({code: code, product: targetresult[i].product,
-                        platform: targetresult[i].platform, version: targetresult[i].version});
-                        display_instance.save((err) => {
-                        if (err) console.log(err);
-                      });
-                    }
-                  });
-                }
-              });
-            }
-          });
-        }
-        else// first build code to be inserted
-        {
-          const data_instance = new Data({codeArray: [code]});
-          data_instance.save((err) => {
-            if (err) return console.log(err);
-          });
-        }
-      res.redirect('/administrate/#tools_version');
-      });
-    });
-    });
-  }
-}
+};
 
