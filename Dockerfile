@@ -1,12 +1,18 @@
-FROM node:17-alpine
+FROM node
+
+RUN npm install -g redis
+
+RUN npm install -g redis-promisify
 
 WORKDIR /app
 
-COPY . . 
+COPY package.json .
 
 RUN npm install
 
-EXPOSE 4000
+COPY . . 
+
+EXPOSE 3000
 
 CMD ["node", "app.js"]
 
