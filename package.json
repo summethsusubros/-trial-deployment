@@ -20,11 +20,11 @@
     "validator": "^13.7.0"
   },
   "scripts": {
-    "start": "node server.js"
+    "start": "node app.js"
   },
   "name": "versionassist",
   "version": "1.0.0",
-  "main": "server.js",
+  "main": "app.js",
   "author": "",
   "license": "ISC",
   "description": ""
