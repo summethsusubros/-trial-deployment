@@ -6,7 +6,7 @@ const passport = require('passport');
 const responseTime = require('response-time');
 const redis = require('redis-promisify');
 
-const client = redis.createClient();
+const client = redis.createClient({ host: process.env.REDIS_HOST, port: 6379 });
 client.on("error", function (err) {
   console.log("Error " + err);
 });
@@ -20,7 +20,7 @@ const adminRoutes = require('./routes/adminRoute');
 
 // connect to mongodb & listen for requests
 const dbURI = 'mongodb+srv://adraju:Abcd1234@cluster0.2nn26wj.mongodb.net/?retryWrites=true&w=majority';
-const PORT = process.env.PORT || 3030;
+const PORT = process.env.PORT || 3000;
 mongoose.connect(dbURI, { useNewUrlParser: true, useUnifiedTopology: true })
   .then(result => app.listen(PORT))
   .catch(err => console.log(err));

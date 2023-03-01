@@ -10,7 +10,7 @@ const Display = require('../models/Display');
 
 const redis = require('redis-promisify');
 
-const client = redis.createClient();
+const client = redis.createClient({ host: process.env.REDIS_HOST, port: 6379 });
 client.on("error", function (err) {
   console.log("Error " + err);
 });
